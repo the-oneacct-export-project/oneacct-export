@@ -21,6 +21,8 @@ class OneWorker
   NON_ZERO = /[1-9][[:digit:]]*/
 
   def perform(common_data, vms, range, groups, template, output)
+    OneacctExporter::Log.setup_log_level(logger)
+
     vms = vms.split("|")
     oda = OneDataAccessor.new(logger)
     logger.debug("Creating user and image maps.")

@@ -7,6 +7,7 @@ require 'optparse/time'
 require 'ostruct'
 #require 'syslog_logger'
 require 'oneacct_exporter'
+require 'oneacct_exporter/log'
 require 'fileutils'
 
 options = OpenStruct.new
@@ -125,15 +126,14 @@ rescue SystemCallError => e
   exit
 end
 
-LOG_LEVEL = Logger::DEBUG
 log = Logger.new(STDOUT)
-log.level = LOG_LEVEL
 
 if options.log_file
   begin
     log_file = File.open(options.log_file, File::WRONLY | File::CREAT | File::APPEND)
     log = Logger.new(log_file)
   rescue => e
+    OneacctExporter::Log.setup_logging(log)
     log.warn("Unable to create log file #{options.log_file}: #{e.message}. Falling back to STDOUT.")
   end
 end
@@ -142,9 +142,7 @@ if options.log_type and options.log_type == :syslog
   log = SyslogLogger.new('oneacct-export')
 end
 
-log.level = LOG_LEVEL
-
-Sidekiq::Logging.logger.level = LOG_LEVEL
+OneacctExporter::Log.setup_log_level(log)
 
 options.delete_field('log_type') if options.log_type
 options.delete_field('log_file') if options.log_file
