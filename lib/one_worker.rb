@@ -5,13 +5,14 @@ require 'sidekiq'
 require 'one_data_accessor'
 require 'one_writer'
 require 'sidekiq_conf'
+require 'oneacct_exporter/log'
 #require 'sidekiq/testing/inline'
 
 class OneWorker
   include Sidekiq::Worker
 
   #just for debugging purposes
-  sidekiq_options :retry => false, :dead => false
+  sidekiq_options :retry => false, :dead => false, :queue => :oneacct_export
 
   B_IN_GB = 1073741824
 
