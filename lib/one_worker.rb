@@ -62,6 +62,11 @@ class OneWorker
         next
       end
 
+      unless vm['HISTORY_RECORDS/HISTORY[1]']
+        logger.error("Skipping malformed record. VM has no history records.")
+        next
+      end
+
       rstime = sum_rstime(vm)
       next unless rstime
 
