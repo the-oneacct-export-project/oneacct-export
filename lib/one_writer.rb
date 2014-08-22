@@ -3,7 +3,6 @@ require 'tempfile'
 require 'fileutils'
 
 class OneWriter
-  CONVERT_FORMAT = "%014d"
   def initialize(data, template, output, log)
     @data = data
     @template = template
@@ -23,16 +22,8 @@ class OneWriter
     @log.debug("Writing to temporary file...")
     tmp.write(result)
     tmp.flush
-    output_dir = Dir.new(@output)
-    output_file = nil
-    last_file = output_dir.entries.sort.last
-    unless /[0-9]{14}/ =~ last_file
-      output_file = CONVERT_FORMAT % 1
-    else
-      output_file = CONVERT_FORMAT % (last_file.to_i + 1)
-    end
-    @log.debug("Copying temporary file into '#{output_file}'")
-    FileUtils.cp(tmp.path, "#{@output}/#{output_file}")
+    @log.debug("Copying temporary file into '#{@output}'")
+    FileUtils.cp(tmp.path, "#{@output}")
     tmp.close
     tmp.unlink
   end
