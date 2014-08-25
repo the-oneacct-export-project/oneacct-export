@@ -19,3 +19,8 @@ output:
 #xml_rpc:
 # secret: username:password #If not specified looking for secret in ONE_AUTH and ~/.one/one_auth
 # endpoint: http://localhost:2633/RPC2 #Defaults to content of ONE_XMLRPC or content of ~/.one/one_endpoint or http://localhost:2633/RPC2
+#
+#redis:
+# namespace: oneacct_export
+# url: redis://localhost:6379
+# password: password

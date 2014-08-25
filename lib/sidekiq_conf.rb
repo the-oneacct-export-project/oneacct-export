@@ -1,9 +1,11 @@
 require 'sidekiq'
+require 'redis_conf'
 
 Sidekiq.configure_client do |config|
-  config.redis = { :namespace => 'oneacct_export', :size => 1 }
+  options = RedisConf.options
+  options[:size] = 1
+  config.redis = options
 end
 Sidekiq.configure_server do |config|
-  config.redis = { :namespace => 'oneacct_export' }
+  config.redis = RedisConf.options
 end
-
