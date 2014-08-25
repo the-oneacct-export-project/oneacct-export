@@ -7,7 +7,9 @@ class OneDataAccessor
 
   def initialize(log)
     @log = log
-    @client = OpenNebula::Client.new
+    secret = Settings['xml_rpc'] ? Settings.xml_rpc['secret'] : nil
+    endpoint = Settings['xml_rpc'] ? Settings.xml_rpc['endpoint'] : nil
+    @client = OpenNebula::Client.new(secret, endpoint)
   end
 
   def mapping(pool_class, xpath)

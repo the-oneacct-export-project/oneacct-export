@@ -10,7 +10,12 @@ endpoint: <fill in>
 output:
   output_dir: <fill in>
   output_type: apel-0.2 #currently only option
-  #num_of_vms_per_file: 500
+# num_of_vms_per_file: 500
+#
 #logging:
 # log_type: file #Two options: file, syslog. Defaults to stdout
 # log_file: /var/log/oneacct-export.log #Used when type file selected
+#
+#xml_rpc:
+# secret: username:password #If not specified looking for secret in ONE_AUTH and ~/.one/one_auth
+# endpoint: http://localhost:2633/RPC2 #Defaults to content of ONE_XMLRPC or content of ~/.one/one_endpoint or http://localhost:2633/RPC2
