@@ -1,5 +1,9 @@
+#Five mandatory parameters
 site_name: Hogwarts 
 cloud_type: OpenNebula
 endpoint: machine.hogwarts.co.uk
 output: /media/data/output
 output_type: apel-0.2
+#logging:
+# log_type: file #Two options: file, syslog. Defaults to stdout
+# log_file: /var/log/oneacct-export.log #Used when type file selected

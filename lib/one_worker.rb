@@ -21,8 +21,13 @@ class OneWorker
   NUMBER = /[[:digit:]]+/
   NON_ZERO = /[1-9][[:digit:]]*/
 
-  def perform(vms, common_data, template, output)
+  def perform(vms, output)
     OneacctExporter::Log.setup_log_level(logger)
+
+    common_data = {}
+    common_data["endpoint"] = Settings['endpoint']
+    common_data["site_name"] = Settings['site_name']
+    common_data["cloud_type"] = Settings['cloud_type']
 
     vms = vms.split("|")
     oda = OneDataAccessor.new(logger)
@@ -59,7 +64,6 @@ class OneWorker
       data['status'] = parse(states[vm['STATE'].to_i], STRING)
       data['end_time'] = parse(vm['ETIME'], NON_ZERO) 
       end_time = data['end_time'].to_i
-      logger.debug("data['end_time']: #{data['end_time']}")
 
       if end_time != 0 and start_time > end_time
         logger.error("Skipping malformed record. VM with id #{data['vm_uuid']} has wrong time entries.")
@@ -88,7 +92,6 @@ class OneWorker
       data['network_outbound'] = (net_rx.to_i / B_IN_GB).round
 
       data['memory'] = parse(vm['MEMORY'], NUMBER, 0)
-      logger.debug("TEMPLATE/IMAGE_ID: #{vm['TEMPLATE/DISK[1]/IMAGE_ID']}.")
       data['image_name'] = parse(image_map[vm['TEMPLATE/DISK[1]/IMAGE_ID']], STRING)
 
       logger.debug("Adding vm with data: #{data} for export.")
@@ -96,7 +99,7 @@ class OneWorker
     end
 
     logger.debug("Creating writer...")
-    ow = OneWriter.new(full_data, template, output, logger)
+    ow = OneWriter.new(full_data, output, logger)
     ow.write
   end
 

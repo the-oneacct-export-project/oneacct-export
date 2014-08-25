@@ -4,11 +4,11 @@ require 'fileutils'
 require 'settings'
 
 class OneWriter
-  def initialize(data, template, output, log)
+  def initialize(data, output, log)
     @data = data
     @output = output
     @log = log
-    @template = template
+    @template = OneWriter.template_filename(Settings['output_type'])
 
   end
 
@@ -28,5 +28,9 @@ class OneWriter
     FileUtils.cp(tmp.path, "#{@output}")
     tmp.close
     tmp.unlink
+  end
+
+  def self.template_filename(template_name)
+    "lib/templates/#{template_name}.erb"
   end
 end
