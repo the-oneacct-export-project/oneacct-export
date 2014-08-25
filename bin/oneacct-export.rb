@@ -5,7 +5,7 @@ $:.unshift(lib_dir) unless $:.include?(lib_dir)
 require 'optparse'
 require 'optparse/time'
 require 'ostruct'
-#require 'syslog_logger'
+require 'syslogger'
 require 'oneacct_exporter'
 require 'oneacct_exporter/log'
 require 'settings'
@@ -60,7 +60,7 @@ unless Settings['site_name'] and Settings['cloud_type'] and Settings['endpoint']
 end
 Settings['endpoint'].chop! if Settings['endpoint'].end_with?("/")
 
-if Settings['logging'] and Settings['logging']['log_type'] == :file.to_s  and !Settings['logging']['log_file']
+if Settings['logging'] and Settings['logging']['log_type'] == 'file' and !Settings['logging']['log_file']
   raise ArgumentError.new "Missing file for logging. Check your configuration file."
 end
 
@@ -86,7 +86,7 @@ end
 
 log = Logger.new(STDOUT)
 
-if Settings['logging'] and Settings['logging']['log_file'] and Settings['logging']['log_type'] == :file.to_s
+if Settings['logging'] and Settings['logging']['log_file'] and Settings['logging']['log_type'] == 'file'
   begin
     log_file = File.open(Settings['logging']['log_file'], File::WRONLY | File::CREAT | File::APPEND)
     log = Logger.new(log_file)
@@ -96,8 +96,8 @@ if Settings['logging'] and Settings['logging']['log_file'] and Settings['logging
   end
 end
 
-if Settings['logging'] and Settings['logging']['log_type'] == :syslog.to_s
-  log = SyslogLogger.new('oneacct-export')
+if Settings['logging'] and Settings['logging']['log_type'] == 'syslog'
+  log = Syslogger.new('oneacct-export')
 end
 
 OneacctExporter::Log.setup_log_level(log)
