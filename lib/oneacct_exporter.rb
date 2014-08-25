@@ -46,7 +46,7 @@ class OneacctExporter
     vms = []
     while vms = oda.vms(batch_number, @range, @groups)
       output_file = CONVERT_FORMAT % new_file_number
-      @log.debug("Staring worker with batch number: #{batch_number}.")
+      @log.info("Staring worker with batch number: #{batch_number}.")
       unless vms.empty?
         OneWorker.perform_async(vms.join("|"), "#{Settings.output['output_dir']}/#{output_file}")
         new_file_number += 1
@@ -54,7 +54,7 @@ class OneacctExporter
       batch_number += 1
     end
 
-    @log.debug("No more records. Exiting...")
+    @log.info("No more records. Exiting...")
   end
 
   def last_file_number

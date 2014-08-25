@@ -49,7 +49,6 @@ class OneWorker
 
       unless vm['STIME']
         logger.error("Skipping a malformed record. VM with id #{data['vm_uuid']} has no StartTime.")
-        logger.error("Malformed vm: #{vm.to_xml}")
         next
       end
       data['start_time'] = parse(vm['STIME'], NUMBER)
@@ -71,7 +70,7 @@ class OneWorker
       end
 
       unless vm['HISTORY_RECORDS/HISTORY[1]']
-        logger.error("Skipping malformed record. VM has no history records.")
+        logger.warn("Skipping malformed record. VM with id #{data['vm_uuid']} has no history records.")
         next
       end
 
@@ -108,7 +107,7 @@ class OneWorker
     vm.each 'HISTORY_RECORDS/HISTORY' do |h|
       if h['RSTIME'] and h['RETIME'] and h['RETIME'] != '0' and h['RSTIME'] != '0'
         if h['RSTIME'].to_i > h['RETIME'].to_i
-          logger.error("Skipping malformed record. VM with id #{data['vm_uuid']} has wrong CpuDuration.")
+          logger.warn("Skipping malformed record. VM with id #{data['vm_uuid']} has wrong CpuDuration.")
           rstime = nil
           break
         end
