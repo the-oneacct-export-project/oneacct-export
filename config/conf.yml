@@ -1,9 +1,16 @@
-#Five mandatory parameters
-site_name: Hogwarts 
-cloud_type: OpenNebula
-endpoint: machine.hogwarts.co.uk
-output: /media/data/output
-output_type: apel-0.2
+#Five mandatory parameters: 
+# site_name
+# cloud_type
+# endpoint
+# output -> output_dir
+# output -> output_type
+site_name: <fill in> 
+cloud_type: <fill in>
+endpoint: <fill in>
+output:
+  output_dir: <fill in>
+  output_type: apel-0.2 #currently only option
+  #num_of_vms_per_file: 500
 #logging:
 # log_type: file #Two options: file, syslog. Defaults to stdout
 # log_file: /var/log/oneacct-export.log #Used when type file selected

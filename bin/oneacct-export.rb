@@ -55,7 +55,7 @@ end
 
 opt_parser.parse!(ARGV)
 
-unless Settings['site_name'] and Settings['cloud_type'] and Settings['endpoint'] and Settings['output'] and Settings['output_type']
+unless Settings['site_name'] and Settings['cloud_type'] and Settings['endpoint'] and Settings['output'] and Settings.output['output_dir'] and Settings.output['output_type']
   raise ArgumentError.new "Missing some mandatory parameters. Check your configuration file."
 end
 Settings['endpoint'].chop! if Settings['endpoint'].end_with?("/")
@@ -72,13 +72,13 @@ if options.include_groups and options.exclude_groups
   raise ArgumentError.new "Mixing of group options is not possible."
 end
 
-template_filename = OneWriter.template_filename(Settings['output_type'])
+template_filename = OneWriter.template_filename(Settings.output['output_type'])
 unless File.exists?(template_filename)
-  raise ArgumentError.new "Non-existing template #{Settings['output_type']}."
+  raise ArgumentError.new "Non-existing template #{Settings.output['output_type']}."
 end
 
 begin
-  FileUtils.mkdir_p Settings['output']
+  FileUtils.mkdir_p Settings.output['output_dir']
 rescue SystemCallError => e
   puts "Cannot create an output directory: #{e.message}. Quitting."
   exit

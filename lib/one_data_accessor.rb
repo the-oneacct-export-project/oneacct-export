@@ -1,7 +1,8 @@
 require 'opennebula'
+require 'settings'
 
 class OneDataAccessor
-  BATCH_SIZE = 500
+  BATCH_SIZE = Settings.output['num_of_vms_per_file'] ? Settings.output['num_of_vms_per_file'] : 500
   STATE_DONE = '6'
 
   def initialize(log)

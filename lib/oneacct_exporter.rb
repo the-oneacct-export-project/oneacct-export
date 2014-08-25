@@ -48,7 +48,7 @@ class OneacctExporter
       output_file = CONVERT_FORMAT % new_file_number
       @log.debug("Staring worker with batch number: #{batch_number}.")
       unless vms.empty?
-        OneWorker.perform_async(vms.join("|"), "#{Settings['output']}/#{output_file}")
+        OneWorker.perform_async(vms.join("|"), "#{Settings.output['output_dir']}/#{output_file}")
         new_file_number += 1
       end
       batch_number += 1
@@ -58,7 +58,7 @@ class OneacctExporter
   end
 
   def last_file_number
-    output_dir = Dir.new(Settings['output'])
+    output_dir = Dir.new(Settings.output['output_dir'])
     last_file = output_dir.entries.sort.last
     /[0-9]{14}/ =~ last_file ? last_file.to_i : 0
   end

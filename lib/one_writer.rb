@@ -8,7 +8,7 @@ class OneWriter
     @data = data
     @output = output
     @log = log
-    @template = OneWriter.template_filename(Settings['output_type'])
+    @template = OneWriter.template_filename(Settings.output['output_type'])
 
   end
 
