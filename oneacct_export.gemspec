@@ -24,4 +24,5 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "opennebula", "~> 4.6"
   spec.add_runtime_dependency "SyslogLogger", "~> 2.0"
   spec.add_runtime_dependency "sidekiq", "~> 3.2"
+  spec.add_runtime_dependency "settingslogic", "~> 2.0.9"
 end

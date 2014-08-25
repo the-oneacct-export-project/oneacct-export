@@ -1,37 +1,33 @@
 require "oneacct_exporter/version"
 require 'opennebula'
 require 'one_worker'
+require 'settings'
 
 class OneacctExporter
   CONVERT_FORMAT = "%014d"
 
-  def initialize(options, log)
+  def initialize(log)
     @log = log
-    @site_name = options.site_name
-    @cloud_type = options.cloud_type
-    @endpoint = options.endpoint
-    @output = options.output
-    @template = options.template_filename
 
     @range = {}
-    @range[:from] = options.records_from
-    @range[:to] = options.records_to
+    @range[:from] = Settings['records_from']
+    @range[:to] = Settings['records_to']
 
     @groups = {}
-    if options.include_groups
-      @groups[:include] = options.include_groups
+    if Settings['include_groups']
+      @groups[:include] = Settings['include_groups']
     end
-    if options.exclude_groups
-      @groups[:exclude] = options.exclude_groups
+    if Settings['exclude_groups']
+      @groups[:exclude] = Settings['exclude_groups']
     end
 
-    if options.groups_file
+    if Settings['groups_file']
       @log.debug("Reading groups from file...")
-      unless File.exists?(options.groups_file) or File.readable?(options.groups_file)
-        @log.error("File contaning groups: #{options.groups_file} doesn't exists or cannot be read. Skipping groups restriction...")
+      unless File.exists?(Settings['groups_file']) or File.readable?(Settings['groups_file'])
+        @log.error("File contaning groups: #{Settings['groups_file']} doesn't exists or cannot be read. Skipping groups restriction...")
         @groups[@groups.keys.first] = []
       else
-        file = File.open(options.groups_file, "r")
+        file = File.open(Settings['groups_file'], "r")
         file.each_line do |line|
           @groups[@groups.keys.first] << line
         end
@@ -42,10 +38,11 @@ class OneacctExporter
 
   def export
     @log.debug("Starting export...")
+
     common_data = {}
-    common_data["endpoint"] = @endpoint
-    common_data["site_name"] = @site_name
-    common_data["cloud_type"] = @cloud_type
+    common_data["endpoint"] = Settings['endpoint']
+    common_data["site_name"] = Settings['site_name']
+    common_data["cloud_type"] = Settings['cloud_type']
 
     new_file_number = last_file_number + 1
     batch_number = 0
@@ -56,7 +53,7 @@ class OneacctExporter
       output_file = CONVERT_FORMAT % new_file_number
       @log.debug("Staring worker with batch number: #{batch_number}.")
       unless vms.empty?
-        OneWorker.perform_async(common_data, vms.join("|"), @range, @groups, @template, "#{@output}/#{output_file}")
+        OneWorker.perform_async(vms.join("|"), common_data, Settings['template_filename'], "#{Settings['output']}/#{output_file}")
         new_file_number += 1
       end
       batch_number += 1
@@ -66,7 +63,7 @@ class OneacctExporter
   end
 
   def last_file_number
-    output_dir = Dir.new(@output)
+    output_dir = Dir.new(Settings['output'])
     last_file = output_dir.entries.sort.last
     /[0-9]{14}/ =~ last_file ? last_file.to_i : 0
   end

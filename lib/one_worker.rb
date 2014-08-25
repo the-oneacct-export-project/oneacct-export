@@ -6,6 +6,7 @@ require 'one_data_accessor'
 require 'one_writer'
 require 'sidekiq_conf'
 require 'oneacct_exporter/log'
+require 'settings'
 #require 'sidekiq/testing/inline'
 
 class OneWorker
@@ -20,7 +21,7 @@ class OneWorker
   NUMBER = /[[:digit:]]+/
   NON_ZERO = /[1-9][[:digit:]]*/
 
-  def perform(common_data, vms, range, groups, template, output)
+  def perform(vms, common_data, template, output)
     OneacctExporter::Log.setup_log_level(logger)
 
     vms = vms.split("|")

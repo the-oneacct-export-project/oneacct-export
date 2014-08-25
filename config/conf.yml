@@ -1,0 +1,5 @@
+site_name: Hogwarts 
+cloud_type: OpenNebula
+endpoint: machine.hogwarts.co.uk
+output: /media/data/output
+output_type: apel-0.2

@@ -1,13 +1,15 @@
 require 'erb'
 require 'tempfile'
 require 'fileutils'
+require 'settings'
 
 class OneWriter
   def initialize(data, template, output, log)
     @data = data
-    @template = template
     @output = output
     @log = log
+    @template = template
+
   end
 
   def write
