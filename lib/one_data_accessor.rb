@@ -1,7 +1,11 @@
 require 'opennebula'
 require 'settings'
+require 'errors'
 
 class OneDataAccessor
+
+  include Errors
+
   BATCH_SIZE = Settings.output['num_of_vms_per_file'] ? Settings.output['num_of_vms_per_file'] : 500
   STATE_DONE = '6'
 
@@ -16,9 +20,11 @@ class OneDataAccessor
     @log.debug("Generating mapping for class: #{pool_class} and xpath: '#{xpath}'.")
     pool = pool_class.new(@client)
     if pool.respond_to? "info_all"
-      pool.info_all
+      rc = pool.info_all
+      check_retval(rc, Errors::ResourceRetrievalError)
     else
-      pool.info
+      rc = pool.info
+      check_retval(rc, Errors::ResourceRetrievalError)
     end
 
     map = {}
@@ -32,7 +38,8 @@ class OneDataAccessor
   def vm(vm_id)
     @log.debug("Retrieving virtual machine with id: #{vm_id}.")
     vm = OpenNebula::VirtualMachine.new(OpenNebula::VirtualMachine.build_xml(vm_id), @client)
-    vm.info
+    rc = vm.info
+    check_retval(rc, Errors::ResourceRetrievalError)
     vm
   end
 
@@ -69,9 +76,28 @@ class OneDataAccessor
     @log.debug("Loading vm pool with batch number: #{batch_number}.")
     from = batch_number * BATCH_SIZE
     to = (batch_number + 1) * BATCH_SIZE - 1
+
     vm_pool = OpenNebula::VirtualMachinePool.new(@client)
-    vm_pool.info(OpenNebula::Pool::INFO_ALL, from, to, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+    rc = vm_pool.info(OpenNebula::Pool::INFO_ALL, from, to, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+    check_retval(rc, Errors::ResourceRetrievalError)
+
     vm_pool
+  end
+
+  def check_retval(rc, e_klass)
+    return true unless OpenNebula.is_error?(rc)
+    case rc.errno
+    when OpenNebula::Error::EAUTHENTICATION
+      fail Errors::AuthenticationError, rc.message
+    when OpenNebula::Error::EAUTHORIZATION
+      fail Errors::UserNotAuthorizedError, rc.message
+    when OpenNebula::Error::ENO_EXISTS
+      fail Errors::ResourceNotFoundError, rc.message
+    when OpenNebula::Error::EACTION
+      fail Errors::ResourceStateError, rc.message
+    else
+      fail e_klass, rc.message
+    end
   end
 end
 

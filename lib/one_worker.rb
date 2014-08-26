@@ -30,19 +30,32 @@ class OneWorker
     common_data["cloud_type"] = Settings['cloud_type']
 
     vms = vms.split("|")
+
+    begin
     oda = OneDataAccessor.new(logger)
     logger.debug("Creating user and image maps.")
     user_map = oda.mapping(OpenNebula::UserPool, "TEMPLATE/X509_DN")
     logger.debug("user_map: #{user_map}")
     image_map = oda.mapping(OpenNebula::ImagePool, "NAME")
     logger.debug("image_map: #{image_map}")
+    rescue => e
+      logger.error("Couldn't create user or image map: #{e.message}. Stopping to avoid malformed records.")
+      return
+    end
+
     states = []
     states << "started" << "started" << "suspended" << "started" << "suspended" << "suspended" << "completed" << "completed" << "suspended"
     full_data = []
 
     vms.each do |vm_id|
+      begin
       logger.debug("Processing vm with id: #{vm_id}")
       vm = oda.vm(vm_id)
+      rescue => e
+        @log.error("Couldn't retrieve data for vm with id: #{vm_id}. Skipping.")
+        next
+      end
+
       data = common_data.clone
 
       data['vm_uuid'] = parse(vm['ID'], STRING)

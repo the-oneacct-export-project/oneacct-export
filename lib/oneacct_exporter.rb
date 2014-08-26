@@ -55,6 +55,8 @@ class OneacctExporter
     end
 
     @log.info("No more records. Exiting...")
+  rescue => e
+    @log.error("Virtual machine retrieval for batch number #{batch_number} failed with error: #{e.message}. Exiting.")
   end
 
   def last_file_number
