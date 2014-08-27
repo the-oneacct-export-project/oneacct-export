@@ -27,7 +27,7 @@ class OneacctExporter
         file.close
       else
         @log.error("File contaning groups: #{options.groups_file} doesn't exists or cannot be read. "\
-                   "Skipping groups restriction...")
+                   'Skipping groups restriction...')
         @groups[@groups.keys.first] = []
       end
     end

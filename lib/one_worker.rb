@@ -39,9 +39,10 @@ class OneWorker
       image_map = oda.mapping(OpenNebula::ImagePool, 'NAME')
       logger.debug("image_map: #{image_map}")
     rescue => e
-      logger.error("Couldn't create user or image map: #{e.message}. "\
-                   "Stopping to avoid malformed records.")
-      return
+      msg = "Couldn't create user or image map: #{e.message}. "\
+            'Stopping to avoid malformed records.'
+      logger.error(msg)
+      raise msg
     end
 
     states = []
@@ -64,7 +65,7 @@ class OneWorker
       data['vm_uuid'] = parse(vm['ID'], STRING)
 
       unless vm['STIME']
-        logger.error("Skipping a malformed record. "\
+        logger.error('Skipping a malformed record. '\
                      "VM with id #{data['vm_uuid']} has no StartTime.")
         next
       end
@@ -82,13 +83,13 @@ class OneWorker
       end_time = data['end_time'].to_i
 
       if end_time != 0 && start_time > end_time
-        logger.error("Skipping malformed record. "\
+        logger.error('Skipping malformed record. '\
                      "VM with id #{data['vm_uuid']} has wrong time entries.")
         next
       end
 
       unless vm['HISTORY_RECORDS/HISTORY[1]']
-        logger.warn("Skipping malformed record. "\
+        logger.warn('Skipping malformed record. '\
                     "VM with id #{data['vm_uuid']} has no history records.")
         next
       end
@@ -116,9 +117,15 @@ class OneWorker
       full_data << data
     end
 
-    logger.debug('Creating writer...')
-    ow = OneWriter.new(full_data, output, logger)
-    ow.write
+    begin
+      logger.debug('Creating writer...')
+      ow = OneWriter.new(full_data, output, logger)
+      ow.write
+    rescue => e
+      msg = "Canno't write result to #{output}: #{e.message}"
+      logger.error(msg)
+      raise msg
+    end
   end
 
   def sum_rstime(vm)
@@ -126,7 +133,7 @@ class OneWorker
     vm.each 'HISTORY_RECORDS/HISTORY' do |h|
       next unless h['RSTIME'] && h['RETIME'] && h['RETIME'] != '0' && h['RSTIME'] != '0'
       if h['RSTIME'].to_i > h['RETIME'].to_i
-        logger.warn("Skipping malformed record. "\
+        logger.warn('Skipping malformed record. '\
                     "VM with id #{data['vm_uuid']} has wrong CpuDuration.")
         rstime = nil
         break
