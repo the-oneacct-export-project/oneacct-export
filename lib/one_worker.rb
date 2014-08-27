@@ -1,5 +1,5 @@
 file_dir_name = File.dirname(__FILE__)
-$:.unshift(file_dir_name) unless $:.include?(file_dir_name)
+$LOAD_PATH.unshift(file_dir_name) unless $LOAD_PATH.include?(file_dir_name)
 
 require 'sidekiq'
 require 'one_data_accessor'
@@ -7,15 +7,15 @@ require 'one_writer'
 require 'sidekiq_conf'
 require 'oneacct_exporter/log'
 require 'settings'
-#require 'sidekiq/testing/inline'
+# require 'sidekiq/testing/inline'
 
 class OneWorker
   include Sidekiq::Worker
 
-  #just for debugging purposes
-  sidekiq_options :retry => false, :dead => false, :queue => :oneacct_export
+  # just for debugging purposes
+  sidekiq_options retry: false, dead: false, queue: :oneacct_export
 
-  B_IN_GB = 1073741824
+  B_IN_GB = 1_073_741_824
 
   STRING = /[[:print:]]+/
   NUMBER = /[[:digit:]]+/
@@ -25,32 +25,35 @@ class OneWorker
     OneacctExporter::Log.setup_log_level(logger)
 
     common_data = {}
-    common_data["endpoint"] = Settings['endpoint']
-    common_data["site_name"] = Settings['site_name']
-    common_data["cloud_type"] = Settings['cloud_type']
+    common_data['endpoint'] = Settings['endpoint']
+    common_data['site_name'] = Settings['site_name']
+    common_data['cloud_type'] = Settings['cloud_type']
 
-    vms = vms.split("|")
+    vms = vms.split('|')
 
     begin
-    oda = OneDataAccessor.new(logger)
-    logger.debug("Creating user and image maps.")
-    user_map = oda.mapping(OpenNebula::UserPool, "TEMPLATE/X509_DN")
-    logger.debug("user_map: #{user_map}")
-    image_map = oda.mapping(OpenNebula::ImagePool, "NAME")
-    logger.debug("image_map: #{image_map}")
+      oda = OneDataAccessor.new(logger)
+      logger.debug('Creating user and image maps.')
+      user_map = oda.mapping(OpenNebula::UserPool, 'TEMPLATE/X509_DN')
+      logger.debug("user_map: #{user_map}")
+      image_map = oda.mapping(OpenNebula::ImagePool, 'NAME')
+      logger.debug("image_map: #{image_map}")
     rescue => e
-      logger.error("Couldn't create user or image map: #{e.message}. Stopping to avoid malformed records.")
+      logger.error("Couldn't create user or image map: #{e.message}. "\
+                   "Stopping to avoid malformed records.")
       return
     end
 
     states = []
-    states << "started" << "started" << "suspended" << "started" << "suspended" << "suspended" << "completed" << "completed" << "suspended"
+    states << 'started' << 'started' << 'suspended' << 'started' << 'suspended'
+    states << 'suspended' << 'completed' << 'completed' << 'suspended'
+
     full_data = []
 
     vms.each do |vm_id|
       begin
-      logger.debug("Processing vm with id: #{vm_id}")
-      vm = oda.vm(vm_id)
+        logger.debug("Processing vm with id: #{vm_id}")
+        vm = oda.vm(vm_id)
       rescue => e
         @log.error("Couldn't retrieve data for vm with id: #{vm_id}. Skipping.")
         next
@@ -61,12 +64,13 @@ class OneWorker
       data['vm_uuid'] = parse(vm['ID'], STRING)
 
       unless vm['STIME']
-        logger.error("Skipping a malformed record. VM with id #{data['vm_uuid']} has no StartTime.")
+        logger.error("Skipping a malformed record. "\
+                     "VM with id #{data['vm_uuid']} has no StartTime.")
         next
       end
       data['start_time'] = parse(vm['STIME'], NUMBER)
       start_time = data['start_time'].to_i
-      data['start_time_readable'] = parse(Time.at(start_time).strftime("%F %T%:z"), STRING)
+      data['start_time_readable'] = parse(Time.at(start_time).strftime('%F %T%:z'), STRING)
 
       data['machine_name'] = parse(vm['DEPLOY_ID'], STRING, "one-#{data['vm_uuid']}")
       data['user_id'] = parse(vm['UID'], STRING)
@@ -74,16 +78,18 @@ class OneWorker
       data['user_name'] = parse(user_map[data['user_id']], STRING)
       data['fqan'] = parse(vm['GNAME'], STRING, nil)
       data['status'] = parse(states[vm['STATE'].to_i], STRING)
-      data['end_time'] = parse(vm['ETIME'], NON_ZERO) 
+      data['end_time'] = parse(vm['ETIME'], NON_ZERO)
       end_time = data['end_time'].to_i
 
-      if end_time != 0 and start_time > end_time
-        logger.error("Skipping malformed record. VM with id #{data['vm_uuid']} has wrong time entries.")
+      if end_time != 0 && start_time > end_time
+        logger.error("Skipping malformed record. "\
+                     "VM with id #{data['vm_uuid']} has wrong time entries.")
         next
       end
 
       unless vm['HISTORY_RECORDS/HISTORY[1]']
-        logger.warn("Skipping malformed record. VM with id #{data['vm_uuid']} has no history records.")
+        logger.warn("Skipping malformed record. "\
+                    "VM with id #{data['vm_uuid']} has no history records.")
         next
       end
 
@@ -110,7 +116,7 @@ class OneWorker
       full_data << data
     end
 
-    logger.debug("Creating writer...")
+    logger.debug('Creating writer...')
     ow = OneWriter.new(full_data, output, logger)
     ow.write
   end
@@ -118,20 +124,20 @@ class OneWorker
   def sum_rstime(vm)
     rstime = 0
     vm.each 'HISTORY_RECORDS/HISTORY' do |h|
-      if h['RSTIME'] and h['RETIME'] and h['RETIME'] != '0' and h['RSTIME'] != '0'
-        if h['RSTIME'].to_i > h['RETIME'].to_i
-          logger.warn("Skipping malformed record. VM with id #{data['vm_uuid']} has wrong CpuDuration.")
-          rstime = nil
-          break
-        end
-        rstime += h['RETIME'].to_i - h['RSTIME'].to_i
+      next unless h['RSTIME'] && h['RETIME'] && h['RETIME'] != '0' && h['RSTIME'] != '0'
+      if h['RSTIME'].to_i > h['RETIME'].to_i
+        logger.warn("Skipping malformed record. "\
+                    "VM with id #{data['vm_uuid']} has wrong CpuDuration.")
+        rstime = nil
+        break
       end
-    end        
+      rstime += h['RETIME'].to_i - h['RSTIME'].to_i
+    end
 
     rstime
   end
 
-  def parse(value, regex, substitute = "NULL")
+  def parse(value, regex, substitute = 'NULL')
     regex =~ value ? value : substitute
   end
 end

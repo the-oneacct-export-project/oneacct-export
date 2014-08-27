@@ -3,7 +3,6 @@ require 'settings'
 require 'errors'
 
 class OneDataAccessor
-
   include Errors
 
   BATCH_SIZE = Settings.output['num_of_vms_per_file'] ? Settings.output['num_of_vms_per_file'] : 500
@@ -19,7 +18,7 @@ class OneDataAccessor
   def mapping(pool_class, xpath)
     @log.debug("Generating mapping for class: #{pool_class} and xpath: '#{xpath}'.")
     pool = pool_class.new(@client)
-    if pool.respond_to? "info_all"
+    if pool.respond_to? 'info_all'
       rc = pool.info_all
       check_retval(rc, Errors::ResourceRetrievalError)
     else
@@ -46,24 +45,22 @@ class OneDataAccessor
   def vms(batch_number, range, groups)
     vms = []
     vm_pool = load_vm_pool(batch_number)
-    if vm_pool.count == 0
-      return nil
-    end
+    return nil if vm_pool.count == 0
 
     @log.debug("Searching for vms based on range: #{range} and groups: #{groups}.")
     vm_pool.each do |vm|
       unless vm['ID']
-        @log.error("Skipping a record without an ID present.")
+        @log.error('Skipping a record without an ID present.')
         next
       end
 
-      #range restriction
-      next if range[:from] and vm['STATE'] == STATE_DONE and vm['ETIME'].to_i < range[:from].to_i
-      next if range[:to] and vm['STIME'].to_i > range[:to].to_i
+      # range restriction
+      next if range[:from] && vm['STATE'] == STATE_DONE && vm['ETIME'].to_i < range[:from].to_i
+      next if range[:to] && vm['STIME'].to_i > range[:to].to_i
 
-      #groups restriction
-      next if groups[:include] and !groups[:include].include? vm['GNAME']
-      next if groups[:exclude] and groups[:exclude].include? vm['GNAME']
+      # groups restriction
+      next if groups[:include] && !groups[:include].include?(vm['GNAME'])
+      next if groups[:exclude] && groups[:exclude].include?(vm['GNAME'])
 
       vms << vm['ID'].to_i
     end
@@ -100,4 +97,3 @@ class OneDataAccessor
     end
   end
 end
-
