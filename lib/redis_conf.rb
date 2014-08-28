@@ -1,8 +1,9 @@
 require 'settings'
 require 'uri'
+require 'input_validator'
 
 class RedisConf
-  URL_RE = /\A#{URI.regexp}\z/
+  extend InputValidator
 
   def self.options
     options = {}
@@ -15,7 +16,7 @@ class RedisConf
     options[:url] ||= 'redis://localhost:6379'
 
     fail ArgumentError, "#{options[:url]} is not a valid URL."\
-      unless options[:url] =~ URL_RE
+      unless is_uri?(options[:url])
 
     if Settings['redis'] && Settings.redis['password']
       fail ArgumentError, 'Redis password cannot be empty'\
