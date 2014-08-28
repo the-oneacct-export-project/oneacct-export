@@ -1,13 +1,9 @@
 require 'spec_helper'
-require 'tmpdir'
 
 describe OneWriter do
   subject { one_writer }
   before :example do
-    output = double('output')
-    allow(output).to receive(:[]).with('output_type') { 'test_output_type' }
-    allow(Settings).to receive(:[]).with('output') { output }
-    allow(Settings).to receive(:output) { output }
+    Settings.output['output_type'] = 'one_writer_test_output_type'
   end
 
   let(:data) { { 'aaa' => 111, 'bbb' => 222 } }

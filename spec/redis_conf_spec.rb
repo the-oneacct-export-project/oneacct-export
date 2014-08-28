@@ -3,21 +3,15 @@ require 'spec_helper'
 describe RedisConf do
   subject { redisconf }
 
-  before :example do
-    allow(Settings).to receive(:[]).with('redis') { redis }
-    allow(Settings).to receive(:redis) { redis }
-  end
-
-  let(:redis) { double('redis') }
   let(:redisconf) { RedisConf }
   let(:default_options) { { namespace: 'oneacct_export', url: 'redis://localhost:6379' } }
 
   describe '#options' do
     context 'without redis options set' do
       before :example do
-        allow(redis).to receive(:[]).with('namespace') { nil }
-        allow(redis).to receive(:[]).with('url') { nil }
-        allow(redis).to receive(:[]).with('password') { nil }
+        Settings.redis['namespace'] = nil
+        Settings.redis['url'] = nil
+        Settings.redis['password'] = nil
       end
 
       it 'will use default values' do
@@ -27,9 +21,9 @@ describe RedisConf do
 
     context 'with different namespace' do
       before :example do
-        allow(redis).to receive(:[]).with('namespace') { 'custom_namespace' }
-        allow(redis).to receive(:[]).with('url') { nil }
-        allow(redis).to receive(:[]).with('password') { nil }
+        Settings.redis['namespace'] = 'custom_namespace'
+        Settings.redis['url'] = nil
+        Settings.redis['password'] = nil
       end
 
       it 'will correctly assign custom namespace' do
@@ -41,13 +35,13 @@ describe RedisConf do
 
     context 'with different url' do
       before :example do
-        allow(redis).to receive(:[]).with('namespace') { nil }
-        allow(redis).to receive(:[]).with('password') { nil }
+        Settings.redis['namespace'] = nil
+        Settings.redis['password'] = nil
       end
 
       context 'that is a valid url' do
         before :example do
-          allow(redis).to receive(:[]).with('url') { 'redis://machine.hogworts:1234' }
+          Settings.redis['url'] = 'redis://machine.hogworts:1234' 
         end
 
         it 'will correctly assign custom url' do
@@ -59,7 +53,7 @@ describe RedisConf do
 
       context 'that is not a valid url' do
         before :example do
-          allow(redis).to receive(:[]).with('url') { 'qwerty_)(*@%?>' }
+          Settings.redis['url'] = 'qwerty_)(*@%?>' 
         end
 
         it 'will raise an ArgumentError' do
@@ -70,13 +64,13 @@ describe RedisConf do
 
     context 'with different password' do
       before :example do
-        allow(redis).to receive(:[]).with('namespace') { nil }
-        allow(redis).to receive(:[]).with('url') { nil }
+        Settings.redis['namespace'] = nil
+        Settings.redis['url'] = nil
       end
 
       context 'that is a valid password' do
         before :example do
-          allow(redis).to receive(:[]).with('password') { 'secret_password' }
+          Settings.redis['password'] = 'secret_password'
         end
 
         it 'will correctly insert password into url' do
@@ -88,7 +82,7 @@ describe RedisConf do
 
       context 'that is not a valid password' do
         before :example do
-          allow(redis).to receive(:[]).with('password') { '' }
+          Settings.redis['password'] = ''
         end
 
         it 'will raise an ArgumentError' do

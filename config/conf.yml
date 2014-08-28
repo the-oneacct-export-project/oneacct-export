@@ -4,12 +4,13 @@
 # endpoint
 # output -> output_dir
 # output -> output_type
-site_name: <fill in> 
-cloud_type: <fill in>
-endpoint: <fill in>
-output:
-  output_dir: <fill in>
-  output_type: apel-0.2 #currently only option
+production:
+  site_name: <fill in> 
+  cloud_type: <fill in>
+  endpoint: <fill in>
+  output:
+    output_dir: <fill in>
+    output_type: apel-0.2 #currently only option
 # num_of_vms_per_file: 500
 #
 #logging:
@@ -24,3 +25,21 @@ output:
 # namespace: oneacct_export
 # url: redis://localhost:6379
 # password: password
+test:
+  site_name: <placeholder>
+  cloud_type: <placeholder>
+  endpoint: <placeholder>
+  output:
+    output_dir: <placeholder>  
+    output_type: <placeholder>
+    num_of_vms_per_file: <placeholder>
+  logging:
+    log_type: <placeholder>
+    log_file: <placeholder>
+  xml_rpc:
+    secret: <placeholder>
+    endpoint: <placeholder>
+  redis:
+    namespace: <placeholder>
+    url: <placeholder>
+    password: <placeholder>

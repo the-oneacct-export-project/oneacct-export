@@ -8,4 +8,6 @@ class Settings < Settingslogic
   source "/etc/oneacct-export/#{CONF_NAME}"\
     if File.exist?("/etc/oneacct-export/#{CONF_NAME}")
   source "config/#{CONF_NAME}"
+
+  namespace ENV['RAILS_ENV']
 end
