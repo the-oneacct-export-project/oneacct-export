@@ -1,1 +1,1 @@
-require_relative '../lib/one_writer'
+require 'one_writer'
