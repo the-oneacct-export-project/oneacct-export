@@ -9,5 +9,5 @@ class Settings < Settingslogic
     if File.exist?("/etc/oneacct-export/#{CONF_NAME}")
   source "config/#{CONF_NAME}"
 
-  namespace ENV['RAILS_ENV']
+  namespace ENV['RAILS_ENV'] ? ENV['RAILS_ENV'] : 'production'
 end

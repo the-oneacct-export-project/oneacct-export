@@ -4,7 +4,7 @@
 # endpoint
 # output -> output_dir
 # output -> output_type
-production:
+defaults: &defaults
   site_name: <fill in> 
   cloud_type: <fill in>
   endpoint: <fill in>
@@ -25,6 +25,10 @@ production:
 # namespace: oneacct_export
 # url: redis://localhost:6379
 # password: password
+production:
+  <<: *defaults
+development:
+  <<: *defaults
 test:
   site_name: <placeholder>
   cloud_type: <placeholder>
