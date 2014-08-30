@@ -1,17 +1,31 @@
 require 'opennebula'
 require 'settings'
 require 'errors'
+require 'logger'
+require 'input_validator'
 
 class OneDataAccessor
   include Errors
+  include InputValidator
 
-  BATCH_SIZE = Settings.output['num_of_vms_per_file'] ? Settings.output['num_of_vms_per_file'] : 500
   STATE_DONE = '6'
 
-  def initialize(log)
-    @log = log
+  attr_reader :log, :batch_size, :client
+
+  def initialize(log = nil)
+    @log = log ? log : Logger.new(STDOUT)
+
+    @batch_size = Settings.output['num_of_vms_per_file'] ? Settings.output['num_of_vms_per_file'] : 500
+    fail ArgumentError, 'Wrong number of vms per file.' unless is_number?(@batch_size)
+
+    initialize_client
+  end
+
+  def initialize_client
     secret = Settings['xml_rpc'] ? Settings.xml_rpc['secret'] : nil
     endpoint = Settings['xml_rpc'] ? Settings.xml_rpc['endpoint'] : nil
+    fail ArgumentError, "#{endpoint} is not a valid URL." if endpoint && !is_uri?(endpoint)
+
     @client = OpenNebula::Client.new(secret, endpoint)
   end
 
@@ -28,6 +42,10 @@ class OneDataAccessor
 
     map = {}
     pool.each do |item|
+      unless item['ID']
+        @log.error("Skipping a resource of the type #{pool_class} without an ID present.")
+        next
+      end
       map[item['ID']] = item[xpath]
     end
 
@@ -35,6 +53,7 @@ class OneDataAccessor
   end
 
   def vm(vm_id)
+    fail ArgumentError, "#{vm_id} is not a valid id." unless is_number?(vm_id)
     @log.debug("Retrieving virtual machine with id: #{vm_id}.")
     vm = OpenNebula::VirtualMachine.new(OpenNebula::VirtualMachine.build_xml(vm_id), @client)
     rc = vm.info
@@ -54,25 +73,40 @@ class OneDataAccessor
         next
       end
 
-      # range restriction
-      next if range[:from] && vm['STATE'] == STATE_DONE && vm['ETIME'].to_i < range[:from].to_i
-      next if range[:to] && vm['STIME'].to_i > range[:to].to_i
-
-      # groups restriction
-      next if groups[:include] && !groups[:include].include?(vm['GNAME'])
-      next if groups[:exclude] && groups[:exclude].include?(vm['GNAME'])
+      next unless want?(vm, range, groups)
 
       vms << vm['ID'].to_i
     end
 
-    @log.debug("Selected vms: #{vms}")
+    @log.debug("Selected vms: #{vms}.")
     vms
   end
 
+  def want?(vm, range, groups)
+    if vm.nil?
+      @log.warn('Obtained nil vm from vm pool.')
+      return false
+    end
+    # range restriction
+    unless range.nil? || range.empty?
+      return false if range[:from] && vm['STATE'] == STATE_DONE && vm['ETIME'].to_i < range[:from].to_i
+      return false if range[:to] && vm['STIME'].to_i > range[:to].to_i
+    end
+
+    # groups restriction
+    unless groups.nil? || groups.empty?
+      return false if groups[:include] && !groups[:include].include?(vm['GNAME'])
+      return false if groups[:exclude] && groups[:exclude].include?(vm['GNAME'])
+    end
+
+    true
+  end
+
   def load_vm_pool(batch_number)
+    fail ArgumentError, "#{batch_number} is not a valid number" unless is_number?(batch_number)
     @log.debug("Loading vm pool with batch number: #{batch_number}.")
-    from = batch_number * BATCH_SIZE
-    to = (batch_number + 1) * BATCH_SIZE - 1
+    from = batch_number * @batch_size
+    to = (batch_number + 1) * @batch_size - 1
 
     vm_pool = OpenNebula::VirtualMachinePool.new(@client)
     rc = vm_pool.info(OpenNebula::Pool::INFO_ALL, from, to, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
