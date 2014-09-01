@@ -45,5 +45,5 @@ test:
     endpoint: <placeholder>
   redis:
     namespace: <placeholder>
-    url: <placeholder>
-    password: <placeholder>
+    url: http://some.random.url.com
+    password: password
