@@ -30,19 +30,19 @@ opt_parser = OptionParser.new do |opts|
 
   opts.on('--include-groups GROUP1[,GROUP2,...]', Array,
           'Retrieves only records of virtual machines which\
-          belong to the specified groups') do |groups|
+        belong to the specified groups') do |groups|
     options.include_groups = groups
   end
 
   opts.on('--exclude-groups GROUP1[,GROUP2,...]', Array,
           "Retrieves only records of virtual machines which\
-          don't belong to the specified groups") do |groups|
+        don't belong to the specified groups") do |groups|
     options.exclude_groups = groups
   end
 
   opts.on('--group-file FILE',
           'If --include-groups or --exclude-groups specified,\
-          loads groups from file FILE') do |file|
+        loads groups from file FILE') do |file|
     options.groups_file = file
   end
 
@@ -80,7 +80,7 @@ if Settings['logging'] && Settings['logging']['log_file'] &&
   rescue => e
     OneacctExporter::Log.setup_logging(log)
     log.warn("Unable to create log file #{Settings['logging']['log_file']}: #{e.message}.\
-             Falling back to STDOUT.")
+           Falling back to STDOUT.")
   end
 end
 
