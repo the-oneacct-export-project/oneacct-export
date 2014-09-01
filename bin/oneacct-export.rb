@@ -70,26 +70,6 @@ if Settings['logging'] && Settings['logging']['log_type'] == 'file' &&
   fail ArgumentError 'Missing file for logging. Check your configuration file.'
 end
 
-if options.records_from && options.records_to && options.records_from >= options.records_to
-  fail ArgumentError 'Wrong time range for records retrieval.'
-end
-
-if options.include_groups && options.exclude_groups
-  fail ArgumentError 'Mixing of group options is not possible.'
-end
-
-template_filename = OneWriter.template_filename(Settings.output['output_type'])
-unless File.exist?(template_filename)
-  fail ArgumentError "Non-existing template #{Settings.output['output_type']}."
-end
-
-begin
-  FileUtils.mkdir_p Settings.output['output_dir']
-rescue SystemCallError => e
-  puts "Cannot create an output directory: #{e.message}. Quitting."
-  exit
-end
-
 log = Logger.new(STDOUT)
 
 if Settings['logging'] && Settings['logging']['log_file'] &&
@@ -110,6 +90,55 @@ end
 
 OneacctExporter::Log.setup_log_level(log)
 
+if options.records_from && options.records_to && options.records_from >= options.records_to
+  fail ArgumentError 'Wrong time range for records retrieval.'
+end
+
+range = {}
+range[:from] = options.records_from
+range[:to] = options.records_to
+
+if options.include_groups && options.exclude_groups
+  fail ArgumentError 'Mixing of group options is not possible.'
+end
+
+unless options.include_groups || options.exclude_groups
+  if options.groups_file
+    fail ArgumentError 'Cannot use group file without specifying group restriction type.'
+  end
+end
+
+groups = {}
+groups[:include] = options.include_groups if options.include_groups
+groups[:exclude] = options.exclude_groups if options.exclude_groups
+
+if options.groups_file
+  log.debug('Reading groups from file...')
+  if File.exist?(options.groups_file) && File.readable?(options.groups_file)
+    file = File.open(options.groups_file, 'r')
+    file.each_line do |line|
+      groups[groups.keys.first] << line
+    end
+    file.close
+  else
+    log.error("File contaning groups: #{options.groups_file} doesn't exists or cannot be read. "\
+              'Skipping groups restriction...')
+    groups[groups.keys.first] = []
+  end
+end
+
+template_filename = OneWriter.template_filename(Settings.output['output_type'])
+unless File.exist?(template_filename)
+  fail ArgumentError "Non-existing template #{Settings.output['output_type']}."
+end
+
+begin
+  FileUtils.mkdir_p Settings.output['output_dir']
+rescue SystemCallError => e
+  puts "Cannot create an output directory: #{e.message}. Quitting."
+  exit
+end
+
 log.debug('Creating OneacctExporter...')
-oneacct_exporter = OneacctExporter.new(options, log)
+oneacct_exporter = OneacctExporter.new(range, groups, log)
 oneacct_exporter.export
