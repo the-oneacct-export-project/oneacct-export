@@ -12,6 +12,9 @@ require 'oneacct_exporter/log'
 require 'settings'
 require 'fileutils'
 
+BLOCKING_DEFAULT = false
+TIMEOUT_DEFAULT = 60*60
+
 options = OpenStruct.new
 
 opt_parser = OptionParser.new do |opts|
@@ -44,6 +47,16 @@ opt_parser = OptionParser.new do |opts|
           'If --include-groups or --exclude-groups specified,\
         loads groups from file FILE') do |file|
     options.groups_file = file
+  end
+
+  opts.on('-b', '--[no-]blocking', 'Run in a blocking mode -\
+          wait until all submitted jobs are processed') do |blocking|
+    options.blocking = blocking
+  end
+
+  opts.on('-t', '--timeout N', Integer, 'Timeout for blocking mode in seconds. \
+          Default is 1 hour.') do |timeout|
+    options.timeout = timeout
   end
 
   opts.on_tail('-h', '--help', 'Shows this message') do
@@ -127,9 +140,13 @@ if options.groups_file
   end
 end
 
+if options.timeout && !options.blocking
+  fail ArgumentError, 'Cannot set timeout without a blocking mode.'
+end
+
 template_filename = OneWriter.template_filename(Settings.output['output_type'])
 unless File.exist?(template_filename)
-  fail ArgumentError "Non-existing template #{Settings.output['output_type']}."
+  fail ArgumentError, "Non-existing template #{Settings.output['output_type']}."
 end
 
 begin
@@ -140,5 +157,14 @@ rescue SystemCallError => e
 end
 
 log.debug('Creating OneacctExporter...')
-oneacct_exporter = OneacctExporter.new(range, groups, log)
+
+opts = {}
+opts[:range] = range
+opts[:groups] = groups
+opts[:blocking] = options.blocking ? options.blocking : BLOCKING_DEFAULT
+opts[:timeout] = options.timeout ? options.timeout : TIMEOUT_DEFAULT
+
+log.debug(opts)
+
+oneacct_exporter = OneacctExporter.new(opts, log)
 oneacct_exporter.export

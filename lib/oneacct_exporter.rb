@@ -2,16 +2,19 @@ require 'oneacct_exporter/version'
 require 'opennebula'
 require 'one_worker'
 require 'settings'
+require 'sidekiq/api'
 
 class OneacctExporter
   CONVERT_FORMAT = '%014d'
 
-  attr_reader :log, :range, :groups
+  attr_reader :log, :range, :groups, :blocking, :timeout
 
-  def initialize(range, groups, log)
+  def initialize(options, log)
     @log = log
-    @range = range
-    @groups = groups
+    @range = options[:range]
+    @groups = options[:groups]
+    @blocking = options[:blocking]
+    @timeout = options[:timeout]
   end
 
   def export
@@ -34,10 +37,44 @@ class OneacctExporter
       batch_number += 1
     end
 
-    @log.info('No more records. Exiting...')
-  rescue => e
+    @log.info('No more records to read.')
+
+    wait_for_proccessing if @blocking
+
+    @log.info('Exiting.')
+  rescue Errors::AuthenticationError, Errors::UserNotAuthorizedError,\
+    Errors::ResourceNotFoundError, Errors::ResourceStateError,\
+    Errors::ResourceRetrievalError => e
     @log.error("Virtual machine retrieval for batch number #{batch_number} "\
                "failed with error: #{e.message}. Exiting.")
+  end
+
+  def wait_for_proccessing
+    @log.info('Proccessing...')
+
+    end_time = Time.new + @timeout
+
+    until all_queues_empty? && all_workers_done? do
+      if end_time < Time.new
+        @log.error("Proccessing time exceeded timeout of #{@timeout} seconds.")
+        break
+      end
+      sleep(5)
+    end
+
+    @log.info('All processing ended.')
+  end
+
+  def all_queues_empty?
+    Sidekiq::Stats.new.queues.values.each do |value|
+      return false unless value == 0
+    end
+
+    true
+  end
+
+  def all_workers_done?
+    Sidekiq::Workers.new.size == 0 ? true : false
   end
 
   def clean_output_dir
