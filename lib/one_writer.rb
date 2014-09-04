@@ -46,6 +46,6 @@ class OneWriter
   end
 
   def self.template_filename(template_name)
-    "lib/templates/#{template_name}.erb"
+    "#{File.dirname(__FILE__)}/templates/#{template_name}.erb"
   end
 end
