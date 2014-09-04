@@ -7,9 +7,9 @@ describe OneWriter do
   end
 
   let(:data) { { 'aaa' => 111, 'bbb' => 222 } }
-  let(:testfile) { 'mock/one_writer_testfile' }
+  let(:testfile) { "#{GEM_DIR}/mock/one_writer_testfile" }
   let(:dev_null) { '/dev/null' }
-  let(:output) { 'mock/one_writer_output' }
+  let(:output) { "#{GEM_DIR}/mock/one_writer_output" }
 
   describe '#new' do
     context 'with correct arguments' do
@@ -61,7 +61,7 @@ describe OneWriter do
 
   describe '#template_filename' do
     it 'returns template name in form of filename within template directory' do
-      expect(OneWriter.template_filename('test')).to eq('lib/templates/test.erb')
+      expect(OneWriter.template_filename('test')).to eq("#{GEM_DIR}/lib/templates/test.erb")
     end
   end
 
@@ -88,7 +88,7 @@ describe OneWriter do
       File.delete(tmp) if File.exist?(tmp)
     end
 
-    let(:tmp) { File.open('mock/one_writer_tmp', 'w') }
+    let(:tmp) { File.open("#{GEM_DIR}/mock/one_writer_tmp", 'w') }
     let(:one_writer) do
       OneWriter.new(data, output, Logger.new(dev_null))
     end
@@ -109,7 +109,7 @@ describe OneWriter do
     end
 
     let(:from) { testfile }
-    let(:to) { 'mock/one_writer_copy' }
+    let(:to) { "#{GEM_DIR}/mock/one_writer_copy" }
     let(:one_writer) do
       OneWriter.new(data, output, Logger.new(dev_null))
     end
@@ -132,13 +132,13 @@ describe OneWriter do
     end
     let(:tmp) do
       tmp = double('tmp')
-      allow(tmp).to receive(:path) { 'mock/one_writer_tmp' }
+      allow(tmp).to receive(:path) { "#{GEM_DIR}/mock/one_writer_tmp" }
       tmp
     end
 
     it 'writes result version of a template into output file' do
       expect(subject).to receive(:write_to_tmp).with(tmp, data)
-      expect(subject).to receive(:copy_to_output).with('mock/one_writer_tmp', output)
+      expect(subject).to receive(:copy_to_output).with("#{GEM_DIR}/mock/one_writer_tmp", output)
       expect(tmp).to receive(:close)
       subject.write
     end

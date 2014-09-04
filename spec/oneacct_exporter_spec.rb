@@ -6,23 +6,28 @@ Sidekiq::Testing.fake!
 describe OneacctExporter do
   subject { oneacct_exporter }
 
-  let(:oneacct_exporter) { OneacctExporter.new({}, {}, Logger.new('/dev/null')) }
+  let(:oneacct_exporter) { OneacctExporter.new({}, Logger.new('/dev/null')) }
 
   describe '#new' do
     it 'returns an instance of OneacctExporter' do
-      expect(OneacctExporter.new({}, {}, 'fake_logger')).to be_instance_of(OneacctExporter)
+      expect(OneacctExporter.new({}, 'fake_logger')).to be_instance_of(OneacctExporter)
     end
 
     context 'with arguments' do
       let(:range) { {1 => 2, 3 => 4} }
       let(:groups) { {5 => 6, 7 => 8} }
+      let(:timeout) { 42 }
+      let(:blocking) { true }
       let(:logger) { 'fake_logger' }
+      let(:opts) { {:range => range, :groups => groups, :timeout => timeout, :blocking => blocking} }
 
       it 'correctly assignes the arguments' do
-        oe = OneacctExporter.new(range, groups, logger)
+        oe = OneacctExporter.new(opts, logger)
         expect(oe.log).to eq(logger)
         expect(oe.groups).to eq(groups)
         expect(oe.range).to eq(range)
+        expect(oe.blocking).to eq(blocking)
+        expect(oe.timeout).to eq(timeout)
       end
     end
   end
@@ -37,10 +42,10 @@ describe OneacctExporter do
 
     context 'with increasing batch number' do
       before :example do
-        expect(oda).to receive(:vms).with(0, {}, {}).ordered { [1, 2, 3] }
-        expect(oda).to receive(:vms).with(1, {}, {}).ordered { [4, 5, 6] }
-        expect(oda).to receive(:vms).with(2, {}, {}).ordered { [7, 8, 9] }
-        expect(oda).to receive(:vms).with(3, {}, {}).ordered { nil }
+        expect(oda).to receive(:vms).with(0, nil, nil).ordered { [1, 2, 3] }
+        expect(oda).to receive(:vms).with(1, nil, nil).ordered { [4, 5, 6] }
+        expect(oda).to receive(:vms).with(2, nil, nil).ordered { [7, 8, 9] }
+        expect(oda).to receive(:vms).with(3, nil, nil).ordered { nil }
       end
 
       it 'will always finish when there are no more vms to process' do
@@ -51,10 +56,10 @@ describe OneacctExporter do
     context 'with non-empty batches of vms' do
       before :example do
         Sidekiq::Worker.clear_all
-        allow(oda).to receive(:vms).with(0, {}, {}).ordered { [1, 2, 3] }
-        allow(oda).to receive(:vms).with(1, {}, {}).ordered { [4, 5, 6] }
-        allow(oda).to receive(:vms).with(2, {}, {}).ordered { [7, 8, 9] }
-        allow(oda).to receive(:vms).with(3, {}, {}).ordered { nil }
+        allow(oda).to receive(:vms).with(0, nil, nil).ordered { [1, 2, 3] }
+        allow(oda).to receive(:vms).with(1, nil, nil).ordered { [4, 5, 6] }
+        allow(oda).to receive(:vms).with(2, nil, nil).ordered { [7, 8, 9] }
+        allow(oda).to receive(:vms).with(3, nil, nil).ordered { nil }
       end
 
       after :example do
@@ -77,11 +82,11 @@ describe OneacctExporter do
     context 'with some empty batches of vms' do
       before :example do
         Sidekiq::Worker.clear_all
-        allow(oda).to receive(:vms).with(0, {}, {}).ordered { [1, 2, 3] }
-        allow(oda).to receive(:vms).with(1, {}, {}).ordered { [] }
-        allow(oda).to receive(:vms).with(2, {}, {}).ordered { [7, 8, 9] }
-        allow(oda).to receive(:vms).with(3, {}, {}).ordered { [] }
-        allow(oda).to receive(:vms).with(4, {}, {}).ordered { nil }
+        allow(oda).to receive(:vms).with(0, nil, nil).ordered { [1, 2, 3] }
+        allow(oda).to receive(:vms).with(1, nil, nil).ordered { [] }
+        allow(oda).to receive(:vms).with(2, nil, nil).ordered { [7, 8, 9] }
+        allow(oda).to receive(:vms).with(3, nil, nil).ordered { [] }
+        allow(oda).to receive(:vms).with(4, nil, nil).ordered { nil }
       end
 
       after :example do
@@ -96,7 +101,7 @@ describe OneacctExporter do
   end
 
   describe '.clean_output_dir' do
-    let(:testdir_path) { "mock/oneacct_exporter_testdir" }
+    let(:testdir_path) { "#{GEM_DIR}/mock/oneacct_exporter_testdir" }
 
     before :example do
       Settings.output['output_dir'] = testdir_path
