@@ -25,6 +25,8 @@ defaults: &defaults
 # namespace: oneacct_export
 # url: redis://localhost:6379
 # password: password
+  sidekiq:
+    queue: oneacct_export
 production:
   <<: *defaults
 development:
@@ -47,3 +49,5 @@ test:
     namespace: <placeholder>
     url: http://some.random.url.com
     password: password
+  sidekiq:
+    queue: oneacct_export

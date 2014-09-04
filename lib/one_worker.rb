@@ -7,13 +7,12 @@ require 'one_writer'
 require 'sidekiq_conf'
 require 'oneacct_exporter/log'
 require 'settings'
-# require 'sidekiq/testing/inline'
 
 class OneWorker
   include Sidekiq::Worker
 
-  # just for debugging purposes
-  sidekiq_options retry: false, dead: false, queue: :oneacct_export
+  sidekiq_options retry: 5, dead: false,\
+    queue: (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'].to_sym : :default
 
   B_IN_GB = 1_073_741_824
 
