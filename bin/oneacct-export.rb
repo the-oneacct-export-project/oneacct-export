@@ -14,6 +14,7 @@ require 'fileutils'
 
 BLOCKING_DEFAULT = false
 TIMEOUT_DEFAULT = 60*60
+COMPATIBILITY_DEFAULT = false
 
 options = OpenStruct.new
 
@@ -57,6 +58,11 @@ opt_parser = OptionParser.new do |opts|
   opts.on('-t', '--timeout N', Integer, 'Timeout for blocking mode in seconds. \
           Default is 1 hour.') do |timeout|
     options.timeout = timeout
+  end
+
+  opts.on('-c', '--[no-]-compatibility-mode', 'Run in compatibility mode -
+          supports OpenNebula 4.4.x') do |compatibility|
+    options.compatibility = compatibility
   end
 
   opts.on_tail('-h', '--help', 'Shows this message') do
@@ -163,6 +169,7 @@ opts[:range] = range
 opts[:groups] = groups
 opts[:blocking] = options.blocking ? options.blocking : BLOCKING_DEFAULT
 opts[:timeout] = options.timeout ? options.timeout : TIMEOUT_DEFAULT
+opts[:compatibility] = options.compatibility ? options.compatibility : COMPATIBILITY_DEFAULT
 
 log.debug(opts)
 

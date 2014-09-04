@@ -10,13 +10,16 @@ class OneDataAccessor
 
   STATE_DONE = '6'
 
-  attr_reader :log, :batch_size, :client
+  attr_reader :log, :batch_size, :client, :compatibility
 
-  def initialize(log = nil)
+  def initialize(compatibility, log = nil)
     @log = log ? log : Logger.new(STDOUT)
+    @compatibility = compatibility
 
     @batch_size = Settings.output['num_of_vms_per_file'] ? Settings.output['num_of_vms_per_file'] : 500
     fail ArgumentError, 'Wrong number of vms per file.' unless is_number?(@batch_size)
+
+    @compatibility_vm_pool = nil
 
     initialize_client
   end
@@ -108,11 +111,22 @@ class OneDataAccessor
     from = batch_number * @batch_size
     to = (batch_number + 1) * @batch_size - 1
 
-    vm_pool = OpenNebula::VirtualMachinePool.new(@client)
-    rc = vm_pool.info(OpenNebula::Pool::INFO_ALL, from, to, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-    check_retval(rc, Errors::ResourceRetrievalError)
+    if @compatibility
+      unless @compatibility_vm_pool
+        vm_pool = OpenNebula::VirtualMachinePool.new(@client)
+        rc = vm_pool.info(OpenNebula::Pool::INFO_ALL, -1, -1, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+        check_retval(rc, Errors::ResourceRetrievalError)
+        @compatibility_vm_pool = vm_pool.to_a
+      end
 
-    vm_pool
+      return @compatibility_vm_pool[from..to]
+    else
+      vm_pool = OpenNebula::VirtualMachinePool.new(@client)
+      rc = vm_pool.info(OpenNebula::Pool::INFO_ALL, from, to, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+      check_retval(rc, Errors::ResourceRetrievalError)
+
+      return vm_pool
+    end
   end
 
   def check_retval(rc, e_klass)

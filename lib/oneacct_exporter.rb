@@ -7,7 +7,7 @@ require 'sidekiq/api'
 class OneacctExporter
   CONVERT_FORMAT = '%014d'
 
-  attr_reader :log, :range, :groups, :blocking, :timeout
+  attr_reader :log, :range, :groups, :blocking, :timeout, :compatibility
 
   def initialize(options, log)
     @log = log
@@ -15,6 +15,7 @@ class OneacctExporter
     @groups = options[:groups]
     @blocking = options[:blocking]
     @timeout = options[:timeout]
+    @compatibility = options[:compatibility]
   end
 
   def export
@@ -24,7 +25,7 @@ class OneacctExporter
 
     new_file_number = 1
     batch_number = 0
-    oda = OneDataAccessor.new(@log)
+    oda = OneDataAccessor.new(@compatibility, @log)
 
     vms = []
     while vms = oda.vms(batch_number, @range, @groups)
