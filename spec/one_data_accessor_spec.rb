@@ -12,7 +12,7 @@ describe OneDataAccessor do
     allow(OpenNebula::Client).to receive(:new) { 'one_client' }
   end
 
-  let(:one_data_accessor) { OneDataAccessor.new(Logger.new('/dev/null')) }
+  let(:one_data_accessor) { OneDataAccessor.new(false, Logger.new('/dev/null')) }
 
   describe '#new' do
     it 'returns OneDataAccessor object' do
@@ -20,7 +20,7 @@ describe OneDataAccessor do
     end
 
     context 'with logger specified' do
-      let(:one_data_accessor) { OneDataAccessor.new('fake_logger') }
+      let(:one_data_accessor) { OneDataAccessor.new(false, 'fake_logger') }
 
       it 'correctly assign logger' do
         expect(subject.log).to eq('fake_logger')
@@ -52,14 +52,14 @@ describe OneDataAccessor do
         let(:one_data_accessor) { nil }
 
         it 'fails with ArgumentError' do
-          expect { OneDataAccessor.new(Logger.new('/dev/null')) }.to raise_error(ArgumentError)
+          expect { OneDataAccessor.new(false, Logger.new('/dev/null')) }.to raise_error(ArgumentError)
         end
       end
     end
   end
 
   describe '.initialize_client' do
-    let(:one_data_accessor) { OneDataAccessor.new(Logger.new('/dev/null')) }
+    let(:one_data_accessor) { OneDataAccessor.new(false, Logger.new('/dev/null')) }
 
     context 'with correct arguments' do
       before :example do
