@@ -55,7 +55,7 @@ class OneacctOpts
         options.timeout = timeout
       end
 
-      opts.on('-c', '--[no-]-compatibility-mode', 'Run in compatibility mode - '\
+      opts.on('-c', '--[no-]compatibility-mode', 'Run in compatibility mode - '\
               'supports OpenNebula 4.4.x') do |compatibility|
         options.compatibility = compatibility
       end
