@@ -45,7 +45,7 @@ class OneacctOpts
         options.groups_file = file
       end
 
-      opts.on('-b', '--[no-]blocking', 'Run in a blocking mode -'\
+      opts.on('-b', '--[no-]blocking', 'Run in a blocking mode - '\
               'wait until all submitted jobs are processed') do |blocking|
         options.blocking = blocking
       end
@@ -94,16 +94,16 @@ class OneacctOpts
 
   def self.check_options_restrictions(options)
     if options.records_from && options.records_to && options.records_from >= options.records_to
-      fail ArgumentError 'Wrong time range for records retrieval.'
+      fail ArgumentError, 'Wrong time range for records retrieval.'
     end
 
     if options.include_groups && options.exclude_groups
-      fail ArgumentError 'Mixing of group options is not possible.'
+      fail ArgumentError, 'Mixing of group options is not possible.'
     end
 
     unless options.include_groups || options.exclude_groups
       if options.groups_file
-        fail ArgumentError 'Cannot use group file without specifying group restriction type.'
+        fail ArgumentError, 'Cannot use group file without specifying group restriction type.'
       end
     end
 
@@ -115,13 +115,13 @@ class OneacctOpts
   def self.check_settings_restrictions
     unless Settings['site_name'] && Settings['cloud_type'] && Settings['endpoint'] &&
         Settings['output'] && Settings.output['output_dir'] && Settings.output['output_type']
-      fail ArgumentError 'Missing some mandatory parameters. Check your configuration file.'
+      fail ArgumentError, 'Missing some mandatory parameters. Check your configuration file.'
     end
     Settings['endpoint'].chop! if Settings['endpoint'].end_with?('/')
 
     if Settings['logging'] && Settings['logging']['log_type'] == 'file' &&
         !Settings['logging']['log_file']
-      fail ArgumentError 'Missing file for logging. Check your configuration file.'
+      fail ArgumentError, 'Missing file for logging. Check your configuration file.'
     end
 
     template_filename = OneWriter.template_filename(Settings.output['output_type'])
