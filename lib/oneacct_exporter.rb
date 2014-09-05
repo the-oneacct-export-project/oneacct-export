@@ -55,7 +55,7 @@ class OneacctExporter
 
     end_time = Time.new + @timeout
 
-    until all_queues_empty? && all_workers_done? do
+    until queue_empty? && all_workers_done? do
       if end_time < Time.new
         @log.error("Proccessing time exceeded timeout of #{@timeout} seconds.")
         break
@@ -66,9 +66,12 @@ class OneacctExporter
     @log.info('All processing ended.')
   end
 
-  def all_queues_empty?
-    Sidekiq::Stats.new.queues.values.each do |value|
-      return false unless value == 0
+  def queue_empty?
+    queue = (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'] : 'default'
+    Sidekiq::Stats.new.queues.each_pair do |queue_name, items_in_queue|
+      if queue_name == queue
+        return false unless items_in_queue == 0
+      end
     end
 
     true
