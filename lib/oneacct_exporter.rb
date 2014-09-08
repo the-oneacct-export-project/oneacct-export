@@ -40,7 +40,7 @@ class OneacctExporter
 
     @log.info('No more records to read.')
 
-    wait_for_proccessing if @blocking
+    wait_for_processing if @blocking
 
     @log.info('Exiting.')
   rescue Errors::AuthenticationError, Errors::UserNotAuthorizedError,\
@@ -50,14 +50,14 @@ class OneacctExporter
                "failed with error: #{e.message}. Exiting.")
   end
 
-  def wait_for_proccessing
-    @log.info('Proccessing...')
+  def wait_for_processing
+    @log.info('Processing...')
 
     end_time = Time.new + @timeout
 
     until queue_empty? && all_workers_done? do
       if end_time < Time.new
-        @log.error("Proccessing time exceeded timeout of #{@timeout} seconds.")
+        @log.error("Processing time exceeded timeout of #{@timeout} seconds.")
         break
       end
       sleep(5)
@@ -70,7 +70,7 @@ class OneacctExporter
     queue = (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'] : 'default'
     Sidekiq::Stats.new.queues.each_pair do |queue_name, items_in_queue|
       if queue_name == queue
-        return false unless items_in_queue == 0
+        return items_in_queue == 0
       end
     end
 
@@ -78,7 +78,7 @@ class OneacctExporter
   end
 
   def all_workers_done?
-    Sidekiq::Workers.new.size == 0 ? true : false
+    Sidekiq::Workers.new.size == 0
   end
 
   def clean_output_dir

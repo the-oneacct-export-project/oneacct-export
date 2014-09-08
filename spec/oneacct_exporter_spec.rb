@@ -175,4 +175,88 @@ describe OneacctExporter do
       end
     end
   end
+
+  describe '.all_workers_done?' do
+    context 'with all workers done' do
+      before :example do
+        allow(Sidekiq::Workers).to receive(:new) { [] }
+      end
+
+      it 'returns true' do
+        expect(subject.all_workers_done?).to be true
+      end
+    end
+
+    context 'with some workers still processing' do
+      before :example do
+        allow(Sidekiq::Workers).to receive(:new) { [1,2] }
+      end
+
+      it 'returns false' do
+        expect(subject.all_workers_done?).to be false
+      end
+    end
+  end
+
+  describe '.queue_empty?' do
+    before :example do
+      Settings.sidekiq['queue'] = 'oneacct_export_test'
+      stats = double('stats')
+      allow(Sidekiq::Stats).to receive(:new) { stats }
+      allow(stats).to receive(:queues) { queues }
+    end
+
+    let(:queues) { {'queue1' => 5, 'queue2' => 0, 'oneacct_export_test' => 0, 'queue3' => 7} }
+
+    context 'with empty queue' do
+      it 'returns true' do
+        expect(subject.queue_empty?).to be true
+      end
+    end
+
+    context 'with empty queue' do
+      before :example do
+        queues['oneacct_export_test'] = 10
+      end
+
+      it 'returns false' do
+        expect(subject.queue_empty?).to be false
+      end
+    end
+
+    context 'with empty queue' do
+      before :example do
+        queues.delete 'oneacct_export_test'
+      end
+
+      it 'returns true' do
+        expect(subject.queue_empty?).to be true
+      end
+    end
+  end
+
+  describe '.wait_for_processing' do
+  let(:oneacct_exporter) { OneacctExporter.new({:timeout => 120}, Logger.new('/dev/null')) }
+
+    context 'without timeout' do
+      it 'ends naturally' do
+        expect(subject).to receive(:queue_empty?).and_return(false, false, true, true, true)
+        expect(subject).to receive(:all_workers_done?).and_return(false, false, true)
+
+        subject.wait_for_processing
+      end
+    end
+
+    context 'with unfinished processing and exceeded timeout' do
+      let(:oneacct_exporter) { OneacctExporter.new({:timeout => 20}, Logger.new('/dev/null')) }
+
+      it 'ends program' do
+        allow(subject).to receive(:queue_empty?) { false }
+        allow(subject).to receive(:all_workers_done?) { false }
+        expect(subject.log).to receive(:error)
+
+        subject.wait_for_processing
+      end
+    end
+  end
 end
