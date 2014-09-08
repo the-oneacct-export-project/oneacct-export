@@ -119,8 +119,8 @@ class OneacctOpts
     end
     Settings['endpoint'].chop! if Settings['endpoint'].end_with?('/')
 
-    if Settings['logging'] && Settings['logging']['log_type'] == 'file' &&
-        !Settings['logging']['log_file']
+    if Settings['logging'] && Settings.logging['log_type'] == 'file' &&
+        !Settings.logging['log_file']
       fail ArgumentError, 'Missing file for logging. Check your configuration file.'
     end
 

@@ -117,6 +117,16 @@ describe OneacctOpts do
   end
 
   describe '#check_settings_restrictions' do
+    before :example do
+      Settings['site_name'] = 'Hogwarts'
+      Settings['cloud_type'] = 'OpenNebula'
+      Settings['endpoint'] = 'machine.hogwarts.co.uk'
+      Settings.output['output_dir'] = '/some/output/dir'
+      Settings.output['output_type'] = 'apel-v0.2'
+      Settings.logging['log_type'] = 'file'
+      Settings.logging['log_file'] = '/var/log/oneacct.log'
+    end
+
     context 'with missing mandatory paramter' do
       context 'site_name' do
         before :example do
@@ -150,7 +160,7 @@ describe OneacctOpts do
 
       context 'output_dir' do
         before :example do
-          Settings['output_dir'] = nil
+          Settings.output['output_dir'] = nil
         end
 
         it 'falis with ArgumentError' do
@@ -160,7 +170,7 @@ describe OneacctOpts do
 
       context 'output_type' do
         before :example do
-          Settings['output_type'] = nil
+          Settings.output['output_type'] = nil
         end
 
         it 'falis with ArgumentError' do
@@ -191,16 +201,6 @@ describe OneacctOpts do
     end
 
     context 'with all settings correct' do
-      before :example do
-        Settings['site_name'] = 'Hogwarts'
-        Settings['cloud_type'] = 'OpenNebula'
-        Settings['endpoint'] = 'machine.hogwarts.co.uk'
-        Settings.output['output_dir'] = '/some/output/dir'
-        Settings.output['output_type'] = 'apel-v0.2'
-        Settings.logging['log_type'] = 'file'
-        Settings.logging['log_file'] = '/var/log/oneacct.log'
-      end
-
       it 'finishes without any failure' do
         OneacctOpts.check_settings_restrictions
       end
