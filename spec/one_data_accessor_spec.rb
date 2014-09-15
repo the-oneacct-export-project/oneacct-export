@@ -160,35 +160,56 @@ describe OneDataAccessor do
 
     let(:vm_pool) { double('vm_pool') }
 
-    context 'with valid batch number' do
-      it 'requests vms with correct range' do
-        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 0, 99, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-        subject.load_vm_pool(0)
+    context 'without compatibility mode' do
+      context 'with valid batch number' do
+        it 'requests vms with correct range' do
+          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 0, 99, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+          subject.load_vm_pool(0)
 
-        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 100, 199, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-        subject.load_vm_pool(1)
+          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 100, 199, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+          subject.load_vm_pool(1)
 
-        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 300, 399, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-        subject.load_vm_pool(3)
+          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 300, 399, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+          subject.load_vm_pool(3)
 
-        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 500, 599, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-        subject.load_vm_pool(5)
+          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 500, 599, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+          subject.load_vm_pool(5)
 
-        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 1000, 1099, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-        subject.load_vm_pool(10)
+          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 1000, 1099, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+          subject.load_vm_pool(10)
 
-        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 1200, 1299, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-        subject.load_vm_pool(12)
+          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 1200, 1299, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+          subject.load_vm_pool(12)
+        end
+
+        it 'returns obtained vm pool' do
+          expect(subject.load_vm_pool(0)).to eq(vm_pool)
+        end
       end
 
-      it 'returns obtained vm pool' do
-        expect(subject.load_vm_pool(0)).to eq(vm_pool)
+      context 'with invalid batch number' do
+        it 'fails with ArgumentError' do
+          expect { subject.load_vm_pool('invalid_number') }.to raise_error(ArgumentError)
+        end
       end
     end
 
-    context 'with invalid batch number' do
-      it 'fails with ArgumentError' do
-        expect { subject.load_vm_pool('invalid_number') }.to raise_error(ArgumentError)
+    context 'with compatibility mode' do
+      before :example do
+        Settings.output['num_of_vms_per_file'] = 3
+        allow(OpenNebula::VirtualMachinePool).to receive(:new) { compatibility_vm_pool }
+        allow(compatibility_vm_pool).to receive(:info) { 'valid_rc' }
+      end
+
+      let(:one_data_accessor) { OneDataAccessor.new(true, Logger.new('/dev/null')) }
+      let(:compatibility_vm_pool) { [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }
+
+      it 'returns correct parts of vm pool' do
+        expect(compatibility_vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, -1, -1, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+        expect(subject.load_vm_pool(0)).to eq([0, 1, 2])
+        expect(subject.load_vm_pool(1)).to eq([3, 4, 5])
+        expect(subject.load_vm_pool(2)).to eq([6, 7, 8])
+        expect(subject.load_vm_pool(3)).to eq([9, 10])
       end
     end
   end
