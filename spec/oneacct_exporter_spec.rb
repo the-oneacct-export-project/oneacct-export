@@ -14,12 +14,12 @@ describe OneacctExporter do
     end
 
     context 'with arguments' do
-      let(:range) { {1 => 2, 3 => 4} }
-      let(:groups) { {5 => 6, 7 => 8} }
+      let(:range) { { 1 => 2, 3 => 4 } }
+      let(:groups) { { 5 => 6, 7 => 8 } }
       let(:timeout) { 42 }
       let(:blocking) { true }
       let(:logger) { 'fake_logger' }
-      let(:opts) { {:range => range, :groups => groups, :timeout => timeout, :blocking => blocking} }
+      let(:opts) { { range: range, groups: groups, timeout: timeout, blocking: blocking } }
 
       it 'correctly assignes the arguments' do
         oe = OneacctExporter.new(opts, logger)
@@ -65,7 +65,7 @@ describe OneacctExporter do
       after :example do
         Sidekiq::Worker.clear_all
       end
-        
+
       it 'starts worker for every vm batch' do
         subject.export
         expect(OneWorker.jobs.size).to eq(3)
@@ -92,7 +92,7 @@ describe OneacctExporter do
       after :example do
         Sidekiq::Worker.clear_all
       end
-        
+
       it 'starts worker for every non-empty vm batch' do
         subject.export
         expect(OneWorker.jobs.size).to eq(2)
@@ -189,7 +189,7 @@ describe OneacctExporter do
 
     context 'with some workers still processing' do
       before :example do
-        allow(Sidekiq::Workers).to receive(:new) { [1,2] }
+        allow(Sidekiq::Workers).to receive(:new) { [1, 2] }
       end
 
       it 'returns false' do
@@ -206,7 +206,7 @@ describe OneacctExporter do
       allow(stats).to receive(:queues) { queues }
     end
 
-    let(:queues) { {'queue1' => 5, 'queue2' => 0, 'oneacct_export_test' => 0, 'queue3' => 7} }
+    let(:queues) { { 'queue1' => 5, 'queue2' => 0, 'oneacct_export_test' => 0, 'queue3' => 7 } }
 
     context 'with empty queue' do
       it 'returns true' do
@@ -236,7 +236,7 @@ describe OneacctExporter do
   end
 
   describe '.wait_for_processing' do
-  let(:oneacct_exporter) { OneacctExporter.new({:timeout => 120}, Logger.new('/dev/null')) }
+    let(:oneacct_exporter) { OneacctExporter.new({ timeout: 120 }, Logger.new('/dev/null')) }
 
     context 'without timeout' do
       it 'ends naturally' do
@@ -248,7 +248,7 @@ describe OneacctExporter do
     end
 
     context 'with unfinished processing and exceeded timeout' do
-      let(:oneacct_exporter) { OneacctExporter.new({:timeout => 20}, Logger.new('/dev/null')) }
+      let(:oneacct_exporter) { OneacctExporter.new({ timeout: 20 }, Logger.new('/dev/null')) }
 
       it 'ends program' do
         allow(subject).to receive(:queue_empty?) { false }

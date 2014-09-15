@@ -44,8 +44,8 @@ class OneacctExporter
 
     @log.info('Exiting.')
   rescue Errors::AuthenticationError, Errors::UserNotAuthorizedError,\
-    Errors::ResourceNotFoundError, Errors::ResourceStateError,\
-    Errors::ResourceRetrievalError => e
+         Errors::ResourceNotFoundError, Errors::ResourceStateError,\
+         Errors::ResourceRetrievalError => e
     @log.error("Virtual machine retrieval for batch number #{batch_number} "\
                "failed with error: #{e.message}. Exiting.")
   end
@@ -55,7 +55,7 @@ class OneacctExporter
 
     end_time = Time.new + @timeout
 
-    until queue_empty? && all_workers_done? do
+    until queue_empty? && all_workers_done?
       if end_time < Time.new
         @log.error("Processing time exceeded timeout of #{@timeout} seconds.")
         break
@@ -69,9 +69,7 @@ class OneacctExporter
   def queue_empty?
     queue = (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'] : 'default'
     Sidekiq::Stats.new.queues.each_pair do |queue_name, items_in_queue|
-      if queue_name == queue
-        return items_in_queue == 0
-      end
+      return items_in_queue == 0 if queue_name == queue
     end
 
     true

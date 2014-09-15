@@ -21,7 +21,7 @@ class RedisConf
     if Settings['redis'] && Settings.redis['password']
       fail ArgumentError, 'Redis password cannot be empty'\
         if Settings.redis['password'].empty?
-          options[:url].insert(options[:url].index('/') + 2, ":#{Settings.redis['password']}@")
+      options[:url].insert(options[:url].index('/') + 2, ":#{Settings.redis['password']}@")
     end
 
     options

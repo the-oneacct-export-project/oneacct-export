@@ -41,7 +41,7 @@ describe RedisConf do
 
       context 'that is a valid url' do
         before :example do
-          Settings.redis['url'] = 'redis://machine.hogworts:1234' 
+          Settings.redis['url'] = 'redis://machine.hogworts:1234'
         end
 
         it 'will correctly assign custom url' do
@@ -53,7 +53,7 @@ describe RedisConf do
 
       context 'that is not a valid url' do
         before :example do
-          Settings.redis['url'] = 'qwerty_)(*@%?>' 
+          Settings.redis['url'] = 'qwerty_)(*@%?>'
         end
 
         it 'will raise an ArgumentError' do

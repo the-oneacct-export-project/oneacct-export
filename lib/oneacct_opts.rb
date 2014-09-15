@@ -5,9 +5,8 @@ require 'oneacct_exporter'
 require 'settings'
 
 class OneacctOpts
-
   BLOCKING_DEFAULT = false
-  TIMEOUT_DEFAULT = 60*60
+  TIMEOUT_DEFAULT = 60 * 60
   COMPATIBILITY_DEFAULT = false
 
   def self.parse(args)
@@ -34,7 +33,7 @@ class OneacctOpts
       end
 
       opts.on('--exclude-groups GROUP1[,GROUP2,...]', Array,
-              "Retrieves only records of virtual machines which "\
+              'Retrieves only records of virtual machines which '\
               "don't belong to the specified groups") do |groups|
         options.exclude_groups = groups
       end

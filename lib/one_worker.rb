@@ -19,8 +19,7 @@ class OneWorker
   STRING = /[[:print:]]+/
   NUMBER = /[[:digit:]]+/
   NON_ZERO = /[1-9][[:digit:]]*/
-  STATES = ['started', 'started', 'suspended', 'started', 'suspended',\
-            'suspended', 'completed', 'completed', 'suspended']
+  STATES = %w(started started suspended started suspended suspended completed completed suspended)
 
   def common_data
     common_data = {}
@@ -46,8 +45,8 @@ class OneWorker
   rescue => e
     msg = "Couldn't create map: #{e.message}. "\
       'Stopping to avoid malformed records.'
-      logger.error(msg)
-      raise msg
+    logger.error(msg)
+    raise msg
   end
 
   def load_vm(vm_id, oda)
@@ -93,7 +92,7 @@ class OneWorker
     if vm['STATE']
       data['status'] = parse(STATES[vm['STATE'].to_i], STRING)
     else
-      data['status'] = "NULL"
+      data['status'] = 'NULL'
     end
 
     unless vm['HISTORY_RECORDS/HISTORY[1]']

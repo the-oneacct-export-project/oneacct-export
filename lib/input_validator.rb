@@ -16,4 +16,3 @@ module InputValidator
     is?(object, URI_RE)
   end
 end
-

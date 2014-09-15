@@ -13,7 +13,7 @@ describe OneWorker do
       Settings['cloud_type'] = 'OpenNebula'
     end
 
-    let(:common_data) { {'endpoint' => 'machine.hogwarts.co.uk', 'site_name' => 'Hogwarts', 'cloud_type' => 'OpenNebula'} }
+    let(:common_data) { { 'endpoint' => 'machine.hogwarts.co.uk', 'site_name' => 'Hogwarts', 'cloud_type' => 'OpenNebula' } }
 
     it 'returns data common for every vm in form of hash' do
       expect(subject.common_data).to eq(common_data)
@@ -183,8 +183,8 @@ describe OneWorker do
       data
     end
 
-    let(:user_map) { {'120' => 'user_name'} }
-    let(:image_map) { {'31' => 'image_name'} }
+    let(:user_map) { { '120' => 'user_name' } }
+    let(:image_map) { { '31' => 'image_name' } }
 
     context 'with valid vm' do
       let(:filename) { 'one_worker_valid_machine.xml' }
@@ -257,7 +257,7 @@ describe OneWorker do
       end
     end
 
-    context 'vm without DEPLOY_ID' do      
+    context 'vm without DEPLOY_ID' do
       let(:filename) { 'one_worker_DEPLOY_ID_missing.xml' }
 
       it 'replaces machine name with string created from id and prefix "one-"' do
@@ -334,7 +334,7 @@ describe OneWorker do
       end
     end
 
-    context 'vm one HISTORY record' do      
+    context 'vm one HISTORY record' do
       let(:filename) { 'one_worker_HISTORY_one.xml' }
 
       it 'returns correct vm data' do
@@ -596,8 +596,8 @@ describe OneWorker do
     end
 
     let(:vms) { '10|20|30' }
-    let(:user_map) { {'120' => 'user_name'} }
-    let(:image_map) { {'31' => 'image_name'} }
+    let(:user_map) { { '120' => 'user_name' } }
+    let(:image_map) { { '31' => 'image_name' } }
     let(:vm1) do
       xml = File.read("#{GEM_DIR}/mock/one_worker_vm1.xml")
       OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))

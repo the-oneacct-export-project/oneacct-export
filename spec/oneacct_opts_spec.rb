@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe OneacctOpts do
   before :example do
-    allow(OneWriter).to receive(:template_filename) { "#{GEM_DIR}/mock/one_writer_testfile"}
+    allow(OneWriter).to receive(:template_filename) { "#{GEM_DIR}/mock/one_writer_testfile" }
   end
 
   let(:options) { OpenStruct.new }
@@ -213,11 +213,11 @@ describe OneacctOpts do
     it 'returns correctly parsed options' do
       options = OneacctOpts.parse(args)
       expect(options.records_from).to be_instance_of(Time)
-      expect(options.records_from).to eq(Time.new(2014,1,1))
+      expect(options.records_from).to eq(Time.new(2014, 1, 1))
       expect(options.records_to).to be_instance_of(Time)
-      expect(options.records_to).to eq(Time.new(2014,7,1))
+      expect(options.records_to).to eq(Time.new(2014, 7, 1))
       expect(options.include_groups).to be_instance_of(Array)
-      expect(options.include_groups).to eq(['aaa','bbb','ccc'])
+      expect(options.include_groups).to eq(%w(aaa bbb ccc))
       expect(options.blocking).to be_instance_of(TrueClass)
       expect(options.blocking).to be true
       expect(options.timeout).to be_instance_of(Fixnum)
