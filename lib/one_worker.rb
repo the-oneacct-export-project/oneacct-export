@@ -69,6 +69,11 @@ class OneWorker
 
     data['start_time'] = parse(vm['STIME'], NUMBER)
     start_time = data['start_time'].to_i
+    if start_time == 0
+      logger.error('Skipping a malformed record. '\
+                   "VM with id #{data['vm_uuid']} has malformed StartTime.")
+      return nil
+    end
     data['start_time_readable'] = parse(Time.at(start_time).strftime('%F %T%:z'), STRING)
     data['end_time'] = parse(vm['ETIME'], NON_ZERO)
     end_time = data['end_time'].to_i
@@ -84,7 +89,12 @@ class OneWorker
     data['group_id'] = parse(vm['GID'], STRING)
     data['user_name'] = parse(user_map[data['user_id']], STRING)
     data['fqan'] = parse(vm['GNAME'], STRING, nil)
-    data['status'] = parse(STATES[vm['STATE'].to_i], STRING)
+
+    if vm['STATE']
+      data['status'] = parse(STATES[vm['STATE'].to_i], STRING)
+    else
+      data['status'] = "NULL"
+    end
 
     unless vm['HISTORY_RECORDS/HISTORY[1]']
       logger.warn('Skipping malformed record. '\
@@ -101,14 +111,14 @@ class OneWorker
     data['suspend'] = parse(suspend.to_s, NUMBER)
 
     vcpu = vm['TEMPLATE/VCPU']
-    data['cpu_count'] = parse(vcpu, NON_ZERO, 1)
+    data['cpu_count'] = parse(vcpu, NON_ZERO, '1')
 
     net_tx = parse(vm['NET_TX'], NUMBER, 0)
     data['network_inbound'] = (net_tx.to_i / B_IN_GB).round
     net_rx = parse(vm['NET_RX'], NUMBER, 0)
     data['network_outbound'] = (net_rx.to_i / B_IN_GB).round
 
-    data['memory'] = parse(vm['MEMORY'], NUMBER, 0)
+    data['memory'] = parse(vm['MEMORY'], NUMBER, '0')
     data['image_name'] = parse(image_map[vm['TEMPLATE/DISK[1]/IMAGE_ID']], STRING)
 
     data
@@ -120,7 +130,7 @@ class OneWorker
       next unless h['RSTIME'] && h['RETIME'] && h['RETIME'] != '0' && h['RSTIME'] != '0'
       if h['RSTIME'].to_i > h['RETIME'].to_i
         logger.warn('Skipping malformed record. '\
-                    "VM with id #{data['vm_uuid']} has wrong CpuDuration.")
+                    "VM with id #{vm['ID']} has wrong CpuDuration.")
         rstime = nil
         break
       end
@@ -145,7 +155,7 @@ class OneWorker
       vm = load_vm(vm_id, oda)
       next unless vm
 
-      logger.debug("Processing vm with id: #{vm_id}")
+      logger.debug("Processing vm with id: #{vm_id}.")
       vm_data = process_vm(vm, user_map, image_map)
       next unless vm_data
 
