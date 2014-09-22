@@ -119,7 +119,7 @@ class OneDataAccessor
         @compatibility_vm_pool = vm_pool.to_a
       end
 
-      return @compatibility_vm_pool[from..to]
+      return @compatibility_vm_pool[from..to] || []
     else
       vm_pool = OpenNebula::VirtualMachinePool.new(@client)
       rc = vm_pool.info(OpenNebula::Pool::INFO_ALL, from, to, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
