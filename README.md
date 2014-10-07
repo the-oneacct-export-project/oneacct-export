@@ -2,10 +2,6 @@
 
 Exporting OpenNebula accounting data.
 
-## Usage
-
-Development alpha version. Not for production use.
-
 ## Contributing
 
 1. Fork it ( https://github.com/Misenko/oneacct_export/fork )
