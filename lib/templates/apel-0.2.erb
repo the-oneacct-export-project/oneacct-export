@@ -1,6 +1,6 @@
 APEL-cloud-message: v0.2
 <% for vm in @data -%>
-VMUUID: <%= vm['endpoint'] %>/compute/<%= vm['vm_uuid'] %> <%= vm['start_time_readable']%>
+VMUUID: <%= vm['endpoint'] %>/compute/<%= vm['vm_uuid'] %> <%= vm['start_time'].strftime('%F %T%:z') %>
 SiteName: <%= vm['site_name']%>
 MachineName: <%= vm['machine_name']%>
 LocalUserId: <%= vm['user_id']%>
@@ -12,8 +12,8 @@ FQAN: /<%= vm['fqan']%>/Role=NULL/Capability=NULL
 FQAN: NULL
 <% end -%>
 Status: <%= vm['status']%>
-StartTime: <%= vm['start_time']%>
-EndTime: <%= vm['end_time']%>
+StartTime: <%= vm['start_time'].to_i%>
+EndTime: <%= vm['end_time'].to_i%>
 SuspendDuration: <%= vm['suspend']%>
 WallDuration: <%= vm['duration']%>
 CpuDuration: <%= vm['duration']%>

@@ -66,16 +66,16 @@ class OneWorker
       return nil
     end
 
-    data['start_time'] = parse(vm['STIME'], NUMBER)
+    data['start_time'] = Time.at(parse(vm['STIME'], NUMBER).to_i)
     start_time = data['start_time'].to_i
     if start_time == 0
       logger.error('Skipping a malformed record. '\
                    "VM with id #{data['vm_uuid']} has malformed StartTime.")
       return nil
     end
-    data['start_time_readable'] = parse(Time.at(start_time).strftime('%F %T%:z'), STRING)
     data['end_time'] = parse(vm['ETIME'], NON_ZERO)
     end_time = data['end_time'].to_i
+    data['end_time'] = Time.at(end_time) if end_time != 0
 
     if end_time != 0 && start_time > end_time
       logger.error('Skipping malformed record. '\

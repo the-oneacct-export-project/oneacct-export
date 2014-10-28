@@ -163,9 +163,8 @@ describe OneWorker do
       data['site_name'] = 'Hogwarts'
       data['cloud_type'] = 'OpenNebula'
       data['vm_uuid'] = '36551'
-      data['start_time'] = '1383741160'
-      data['start_time_readable'] = '2013-11-06 13:32:40+01:00'
-      data['end_time'] = '1383742270'
+      data['start_time'] = Time.at(1383741160)
+      data['end_time'] = Time.at(1383742270)
       data['machine_name'] = 'one-36551'
       data['user_id'] = '120'
       data['group_id'] = '0'
@@ -617,9 +616,8 @@ describe OneWorker do
       data['site_name'] = 'Hogwarts'
       data['cloud_type'] = 'OpenNebula'
       data['vm_uuid'] = '36551'
-      data['start_time'] = '1383741160'
-      data['start_time_readable'] = '2013-11-06 13:32:40+01:00'
-      data['end_time'] = '1383742270'
+      data['start_time'] = Time.at(1383741160)
+      data['end_time'] = Time.at(1383742270)
       data['machine_name'] = 'one-36551'
       data['user_id'] = '120'
       data['group_id'] = '0'
