@@ -1,4 +1,4 @@
-[![Build Status](https://secure.travis-ci.org/Misenko/oneacct_export.png)(http://travis-ci.org/Misenko/oneacct_export)
+[![Build Status](https://secure.travis-ci.org/Misenko/oneacct_export.png)](http://travis-ci.org/Misenko/oneacct_export)
 [![Dependency Status](https://gemnasium.com/Misenko/oneacct_export.png)](https://gemnasium.com/Misenko/oneacct_export)
 [![Gem Version](https://fury-badge.herokuapp.com/rb/oneacct-export.png)](https://badge.fury.io/rb/oneacct-export)
 [![Code Climate](https://codeclimate.com/github/Misenko/oneacct_export.png)](https://codeclimate.com/github/Misenko/oneacct_export)
