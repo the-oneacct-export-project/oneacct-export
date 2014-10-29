@@ -37,7 +37,7 @@ class OneWorker
 
   def create_image_map(oda)
     logger.debug('Creating image map.')
-    create_map(OpenNebula::ImagePool, 'NAME', oda)
+    create_map(OpenNebula::ImagePool, 'TEMPLATE/VMCATCHER_EVENT_AD_MPURI', oda)
   end
 
   def create_map(pool_type, mapping, oda)
@@ -45,8 +45,8 @@ class OneWorker
   rescue => e
     msg = "Couldn't create map: #{e.message}. "\
       'Stopping to avoid malformed records.'
-    logger.error(msg)
-    raise msg
+      logger.error(msg)
+      raise msg
   end
 
   def load_vm(vm_id, oda)
@@ -86,7 +86,8 @@ class OneWorker
     data['machine_name'] = parse(vm['DEPLOY_ID'], STRING, "one-#{data['vm_uuid']}")
     data['user_id'] = parse(vm['UID'], STRING)
     data['group_id'] = parse(vm['GID'], STRING)
-    data['user_name'] = parse(user_map[data['user_id']], STRING)
+    data['user_name'] = parse(vm['USER_TEMPLATE/USER_X509_DN'], STRING, nil)
+    data['user_name'] = parse(user_map[data['user_id']], STRING) unless data['user_name']
     data['fqan'] = parse(vm['GNAME'], STRING, nil)
 
     if vm['STATE']
@@ -118,9 +119,26 @@ class OneWorker
     data['network_outbound'] = (net_rx.to_i / B_IN_GB).round
 
     data['memory'] = parse(vm['MEMORY'], NUMBER, '0')
-    data['image_name'] = parse(image_map[vm['TEMPLATE/DISK[1]/IMAGE_ID']], STRING)
+
+    data['image_name'] = parse(image_map[vm['TEMPLATE/DISK[1]/IMAGE_ID']], STRING, nil)
+    data['image_name'] = parse(mixin(vm), STRING) unless data['image_name']
 
     data
+  end
+
+  def mixin(vm)
+    mixin_locations = []
+    mixin_locations << 'USER_TEMPLATE/OCCI_COMPUTE_MIXINS' << 'USER_TEMPLATE/OCCI_MIXIN' << 'TEMPLATE/OCCI_MIXIN'
+
+    mixin_locations.each do |mixins|
+      vm.each mixins do |mixin|
+        mixin = mixin.text.split
+        mixin.select! { |line| line.include? 'os_tpl' }
+        return mixin[0] unless mixins.empty?
+      end
+    end
+
+    nil
   end
 
   def sum_rstime(vm)
