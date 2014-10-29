@@ -44,9 +44,9 @@ class OneWorker
     oda.mapping(pool_type, mapping)
   rescue => e
     msg = "Couldn't create map: #{e.message}. "\
-      'Stopping to avoid malformed records.'
-      logger.error(msg)
-      raise msg
+          'Stopping to avoid malformed records.'
+    logger.error(msg)
+    raise msg
   end
 
   def load_vm(vm_id, oda)
