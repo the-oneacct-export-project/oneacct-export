@@ -44,9 +44,9 @@ class OneWorker
     oda.mapping(pool_type, mapping)
   rescue => e
     msg = "Couldn't create map: #{e.message}. "\
-      'Stopping to avoid malformed records.'
-      logger.error(msg)
-      raise msg
+          'Stopping to avoid malformed records.'
+    logger.error(msg)
+    raise msg
   end
 
   def load_vm(vm_id, oda)
@@ -127,18 +127,17 @@ class OneWorker
   end
 
   def mixin(vm)
-    mixin_locations = []
-    mixin_locations << 'USER_TEMPLATE/OCCI_COMPUTE_MIXINS' << 'USER_TEMPLATE/OCCI_MIXIN' << 'TEMPLATE/OCCI_MIXIN'
+    mixin_locations = %w(USER_TEMPLATE/OCCI_COMPUTE_MIXINS USER_TEMPLATE/OCCI_MIXIN TEMPLATE/OCCI_MIXIN)
 
-    mixin_locations.each do |mixins|
-      vm.each mixins do |mixin|
+    mixin_locations.each do |mixin_location|
+      vm.each mixin_location do |mixin|
         mixin = mixin.text.split
-        mixin.select! { |line| line.include? 'os_tpl' }
-        return mixin[0] unless mixins.empty?
+        mixin.select! { |line| line.include? '/occi/infrastructure/os_tpl#' }
+        return mixin.first unless mixin.empty?
       end
     end
 
-    nil
+    nil # nothing found
   end
 
   def sum_rstime(vm)
@@ -188,7 +187,7 @@ class OneWorker
     ow = OneWriter.new(data, output, logger)
     ow.write
   rescue => e
-    msg = "Canno't write result to #{output}: #{e.message}"
+    msg = "Cannot write result to #{output}: #{e.message}"
     logger.error(msg)
     raise msg
   end
