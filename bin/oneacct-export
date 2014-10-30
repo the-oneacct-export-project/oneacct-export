@@ -17,7 +17,7 @@ if Settings['logging'] && Settings['logging']['log_type'] == 'file'
     log_file = File.open(Settings['logging']['log_file'], File::WRONLY | File::CREAT | File::APPEND)
     log = Logger.new(log_file)
   rescue => e
-    OneacctExporter::Log.setup_logging(log)
+    OneacctExporter::Log.setup_log_level(log)
     log.warn("Unable to create log file #{Settings['logging']['log_file']}: #{e.message}.\
            Falling back to STDOUT.")
   end

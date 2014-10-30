@@ -534,6 +534,45 @@ describe OneWorker do
         expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
       end
     end
+
+    context 'vm with USER_TEMPLATE/OCCI_COMPUTE_MIXINS' do
+      let(:filename) { 'one_worker_vm4.xml' }
+      let(:image_name) { 'http://occi.localhost/occi/infrastructure/os_tpl#uuid_monitoring_20' }
+
+      it 'w/o map info uses os_tpl mixin' do
+        expect(subject.process_vm(vm, user_map, {})['image_name']).to eq(image_name)
+      end
+
+      it 'w/ map info uses map info' do
+        expect(subject.process_vm(vm, user_map, image_map)['image_name']).to eq(data['image_name'])
+      end
+    end
+
+    context 'vm with USER_TEMPLATE/OCCI_MIXIN' do
+      let(:filename) { 'one_worker_vm5.xml' }
+      let(:image_name) { 'https://occi.localhost/occi/infrastructure/os_tpl#omr_worker_x86_64_ide_1_0' }
+
+      it 'w/o map info uses os_tpl mixin' do
+        expect(subject.process_vm(vm, user_map, {})['image_name']).to eq(image_name)
+      end
+
+      it 'w/ map info uses map info' do
+        expect(subject.process_vm(vm, user_map, image_map)['image_name']).to eq(data['image_name'])
+      end
+    end
+
+    context 'vm with USER_TEMPLATE/USER_X509_DN' do
+      let(:filename) { 'one_worker_vm6.xml' }
+      let(:user_name) { '/MY=STuPID/CN=DN/CN=HERE' }
+
+      it 'w/o map info uses USER_X509_DN' do
+        expect(subject.process_vm(vm, user_map, {})['user_name']).to eq(user_name)
+      end
+
+      it 'w/ map info uses USER_X509_DN' do
+        expect(subject.process_vm(vm, user_map, image_map)['user_name']).to eq(user_name)
+      end
+    end
   end
 
   describe '.sum_rstime' do
