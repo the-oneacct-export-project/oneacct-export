@@ -1,30 +1,31 @@
-#Five mandatory parameters: 
+#There are six mandatory parameters: 
 # site_name
 # cloud_type
 # endpoint
 # output -> output_dir
 # output -> output_type
+# sidekiq -> queue
 defaults: &defaults
-  site_name: <fill in> 
-  cloud_type: <fill in>
-  endpoint: <fill in>
+  site_name: <fill in> #Usually a shor provider name, e.g. CESNET 
+  cloud_type: OpenNebula
+  endpoint: <fill in> #URL of your OCCI endpoint, e.g. https://fqdn.example.com:80
   output:
-    output_dir: <fill in>
-    output_type: apel-0.2 #currently only option
-# num_of_vms_per_file: 500
+    output_dir: <fill in> #Directory for outgoing messages
+    output_type: apel-0.2 #Format of outgoing messages. apel-0.2 is currently the only option.
+#   num_of_vms_per_file: 500 #Maximum number of virtual machine records per one output file.
 #
-#logging:
-# log_type: file #Two options: file, syslog. Defaults to stdout
-# log_file: /var/log/oneacct-export.log #Used when type file selected
+# logging:
+#   log_type: file #Two options: file, syslog. Defaults to stdout
+#   log_file: /var/log/oneacct-export.log #Used when type file selected
 #
-#xml_rpc:
-# secret: username:password #If not specified looking for secret in ONE_AUTH and ~/.one/one_auth
-# endpoint: http://localhost:2633/RPC2 #Defaults to content of ONE_XMLRPC or content of ~/.one/one_endpoint or http://localhost:2633/RPC2
+# xml_rpc:
+#   secret: username:password #If not specified looking for secret in ONE_AUTH and ~/.one/one_auth.
+#   endpoint: http://localhost:2633/RPC2 #Defaults to content of ONE_XMLRPC or content of ~/.one/one_endpoint or http://localhost:2633/RPC2.
 #
-#redis:
-# namespace: oneacct_export
-# url: redis://localhost:6379
-# password: password
+# redis:
+#   namespace: oneacct_export
+#   url: redis://localhost:6379 #URL of redis server, defaults to redis://localhost:6379.
+#   password: password #Password to access redis server if needed.
   sidekiq:
     queue: oneacct_export
 production:
