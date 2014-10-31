@@ -57,7 +57,7 @@ Configuration file can be read by OneacctExport from these three locations:
 * /etc/oneacct-export/conf.yml
 * &lt;PATH_TO_GEM_DIR&gt;/config/conf.yml
  
-The example configuration file can be found at the last location &lt;PATH_TO_GEM_DIR&gt;/config/conf.yml. When editing a configuration file you have to follow the division into three environments: prododuction, 
+The example configuration file can be found at the last location &lt;PATH_TO_GEM_DIR&gt;/config/conf.yml. When editing a configuration file you have to follow the division into three environments: production, 
 development and test. All the configuration options are described in the example configuration file.
  
 ###Create a configuration file for Sidekiq
