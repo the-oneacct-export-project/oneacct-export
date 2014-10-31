@@ -8,6 +8,7 @@ require 'sidekiq_conf'
 require 'oneacct_exporter/log'
 require 'settings'
 
+# Sidekiq worker class
 class OneWorker
   include Sidekiq::Worker
 
@@ -21,6 +22,7 @@ class OneWorker
   NON_ZERO = /[1-9][[:digit:]]*/
   STATES = %w(started started suspended started suspended suspended completed completed suspended)
 
+  # Prepare data that are common for every virtual machine
   def common_data
     common_data = {}
     common_data['endpoint'] = Settings['endpoint']
@@ -30,16 +32,23 @@ class OneWorker
     common_data
   end
 
+  # Create mapping of user ID and specified element
+  #
+  # @return [Hash] created map
   def create_user_map(oda)
     logger.debug('Creating user map.')
     create_map(OpenNebula::UserPool, 'TEMPLATE/X509_DN', oda)
   end
 
+  # Create mapping of image ID and specified element
+  #
+  # @return [Hash] created map
   def create_image_map(oda)
     logger.debug('Creating image map.')
     create_map(OpenNebula::ImagePool, 'TEMPLATE/VMCATCHER_EVENT_AD_MPURI', oda)
   end
 
+  # Generic method for mapping creation
   def create_map(pool_type, mapping, oda)
     oda.mapping(pool_type, mapping)
   rescue => e
@@ -49,6 +58,9 @@ class OneWorker
     raise msg
   end
 
+  # Load virtual machine with specified ID
+  #
+  # @return [OpenNebula::VirtualMachine] virtual machine
   def load_vm(vm_id, oda)
     oda.vm(vm_id)
   rescue => e
@@ -56,6 +68,9 @@ class OneWorker
     return nil
   end
 
+  # Obtain and parse required data from vm 
+  #
+  # @return [Hash] required data from virtual machine
   def process_vm(vm, user_map, image_map)
     data = common_data.clone
 
@@ -126,6 +141,11 @@ class OneWorker
     data
   end
 
+  # Look for 'os_tpl' OCCI mixin to better identifie virtual machine's image
+  #
+  # @param [OpenNebula::VirtualMachine] vm virtual machine
+  #
+  # @return [NilClass, String] if found, mixin identifying string, nil otherwise
   def mixin(vm)
     mixin_locations = %w(USER_TEMPLATE/OCCI_COMPUTE_MIXINS USER_TEMPLATE/OCCI_MIXIN TEMPLATE/OCCI_MIXIN)
 
@@ -140,6 +160,11 @@ class OneWorker
     nil # nothing found
   end
 
+  # Sums RSTIME (time when virtual machine was actually running)
+  #
+  # @param [OpenNebula::VirtualMachine] vm virtual machine
+  #
+  # @return [Integer] RSTIME
   def sum_rstime(vm)
     rstime = 0
     vm.each 'HISTORY_RECORDS/HISTORY' do |h|
@@ -156,6 +181,10 @@ class OneWorker
     rstime
   end
 
+  # Sidekiq specific method, specifies the purpose of the worker
+  #
+  # @param [String] vms IDs of virtual machines to process in form of numbers separated by '|' (easier for cooperation with redis)
+  # @param [String] output output directory
   def perform(vms, output)
     OneacctExporter::Log.setup_log_level(logger)
 
@@ -182,6 +211,7 @@ class OneWorker
     write_data(data, output)
   end
 
+  # Write processed data into output directory
   def write_data(data, output)
     logger.debug('Creating writer...')
     ow = OneWriter.new(data, output, logger)

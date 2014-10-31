@@ -4,8 +4,15 @@ require 'fileutils'
 require 'settings'
 require 'logger'
 
+# Class responsible for writing data into files in specific format
+#
+# @attr_reader [Hash] data vm data
+# @attr_reader [String] output path to the output directory
+# @attr_reader [any logger] logger
 class OneWriter
+
   attr_reader :data, :output, :log
+
   def initialize(data, output, log = Logger.new(STDOUT))
     fail ArgumentError, 'Data and output cannot be nil' if data.nil? || output.nil?
 
@@ -17,6 +24,7 @@ class OneWriter
     @log = log
   end
 
+  # Write data to file in output directory
   def write
     @log.debug('Creating temporary file...')
     tmp = Tempfile.new('oneacct_export')
@@ -38,6 +46,9 @@ class OneWriter
     FileUtils.cp(from, to)
   end
 
+  # Prepare file content according to ERB template
+  #
+  # @return [String] transformed content
   def fill_template
     @log.debug("Reading erb template from file: '#{@template}'.")
     erb = ERB.new(File.read(@template), nil, '-')
@@ -45,6 +56,9 @@ class OneWriter
     erb.result(binding)
   end
 
+  # Load template for data conversion
+  #
+  # @param [String] template_name name of the template to look for
   def self.template_filename(template_name)
     "#{File.dirname(__FILE__)}/templates/#{template_name}.erb"
   end

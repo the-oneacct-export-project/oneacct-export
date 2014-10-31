@@ -4,6 +4,7 @@ require 'ostruct'
 require 'oneacct_exporter'
 require 'settings'
 
+# Class for parsing command line arguments
 class OneacctOpts
   BLOCKING_DEFAULT = false
   TIMEOUT_DEFAULT = 60 * 60
@@ -78,6 +79,7 @@ class OneacctOpts
     options
   end
 
+  # Set default values for not specified options
   def self.set_defaults(options)
     options.blocking = BLOCKING_DEFAULT unless options.blocking
     unless options.timeout
@@ -91,38 +93,47 @@ class OneacctOpts
     check_settings_restrictions
   end
 
+  # Make sure command line parameters are sane
   def self.check_options_restrictions(options)
+    #make sure date range make sense
     if options.records_from && options.records_to && options.records_from >= options.records_to
       fail ArgumentError, 'Wrong time range for records retrieval.'
     end
 
+    #make sure only one group restriction is used
     if options.include_groups && options.exclude_groups
       fail ArgumentError, 'Mixing of group options is not possible.'
     end
 
+    #make sure group file option is not used without specifying group restriction type
     unless options.include_groups || options.exclude_groups
       if options.groups_file
         fail ArgumentError, 'Cannot use group file without specifying group restriction type.'
       end
     end
 
+    #make sure that timeout option is not used without blocking option
     if options.timeout && !options.blocking
       fail ArgumentError, 'Cannot set timeout without a blocking mode.'
     end
   end
 
+  # Make sure configuration is sane
   def self.check_settings_restrictions
+    #make sure all mandatory parameters are set
     unless Settings['site_name'] && Settings['cloud_type'] && Settings['endpoint'] &&
         Settings['output'] && Settings.output['output_dir'] && Settings.output['output_type']
       fail ArgumentError, 'Missing some mandatory parameters. Check your configuration file.'
     end
     Settings['endpoint'].chop! if Settings['endpoint'].end_with?('/')
 
+    #make sure log file is specified while loggin to file
     if Settings['logging'] && Settings.logging['log_type'] == 'file' &&
         !Settings.logging['log_file']
       fail ArgumentError, 'Missing file for logging. Check your configuration file.'
     end
 
+    #make sure specified template really exists
     template_filename = OneWriter.template_filename(Settings.output['output_type'])
     unless File.exist?(template_filename)
       fail ArgumentError, "Non-existing template #{Settings.output['output_type']}."
