@@ -1,5 +1,6 @@
 require 'uri'
 
+# Simple helper module for input validation
 module InputValidator
   URI_RE = /\A#{URI.regexp}\z/
   NUMBER_RE = /\A[[:digit:]]+\z/

@@ -2,9 +2,13 @@ require 'settings'
 require 'uri'
 require 'input_validator'
 
+# Class that deals with Redis server configuration options
 class RedisConf
   extend InputValidator
 
+  # Read and parse Redis server configuration options
+  #
+  # @return [Hash] redis server options ready for use 
   def self.options
     options = {}
     if Settings['redis']
