@@ -67,7 +67,7 @@ can be found on its [wiki page](https://github.com/mperham/sidekiq/wiki/Advanced
 The important thing is to set the same queue name in both OneacctExport and Sidekiq configuration files. OneacctExport is currently supporting adding jobs to only one queue.
  
 ###Configure RPC connection
-RPC connection for OpenNebula can be configured in three ways:
+RPC connection for OpenNebula can be configured in two ways:
 
 * Via OneacctExport configuration file, option xml_rpc and its suboptions
 * Via Opennebula configuration mechanism:
