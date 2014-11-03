@@ -72,7 +72,7 @@ class OneDataAccessor
 
   # Retrieve virtual machine
   #
-  # @param [Integer] ID of vm to retrieve
+  # @param [Integer] vm_id ID of vm to retrieve
   #
   # @return [OpenNebula::VirtualMachine] virtual machine
   def vm(vm_id)
