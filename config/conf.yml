@@ -5,18 +5,18 @@ defaults: &defaults
   endpoint: https://occi.localhost.com:11443/ # URL of your OCCI endpoint, e.g. https://fqdn.example.com:11443/
   output:
     output_dir: /var/spool/apel/outgoing/00000000 # Directory for outgoing messages
-    output_type: apel-0.2 # Format of outgoing messages. apel-0.2 is currently the only option.
-    num_of_vms_per_file: 500 # Maximum number of virtual machine records per one output file.
+    output_type: apel-0.2 # Format of outgoing messages. apel-0.2 is currently the only option
+    num_of_vms_per_file: 500 # Maximum number of virtual machine records per one output file
   logging:
     log_type: file # Two options: file, syslog. Defaults to stdout
     log_file: /var/log/oneacct-export/oneacct-export.log # Used when type file selected
   xml_rpc:
-    secret: oneadmin:opennebula # If not specified looking for secret in ONE_AUTH and ~/.one/one_auth.
-    endpoint: http://localhost:2633/RPC2 # Defaults to content of ONE_XMLRPC or content of ~/.one/one_endpoint or http://localhost:2633/RPC2.
+    secret: oneadmin:opennebula # If not specified looking for secret in ONE_AUTH and ~/.one/one_auth
+    endpoint: http://localhost:2633/RPC2 # Defaults to content of ONE_XMLRPC or content of ~/.one/one_endpoint or http://localhost:2633/RPC2
   redis:
     namespace: oneacct_export # Namespace used by redis for sidekiq jobs
-    url: redis://localhost:6379 # URL of redis server, defaults to redis://localhost:6379.
-    password: password # Password to access redis server if needed.
+    url: redis://localhost:6379 # URL of redis server, defaults to redis://localhost:6379
+    password: # Password to access redis server if needed
   sidekiq:
     queue: oneacct_export # Name of the redis queue used by sidekiq, must match sidekiq.yml configuration
 
