@@ -1,6 +1,6 @@
 ---
 :concurrency: 5
-#:pidfile: ./tmp/pids/sidekiq.pid
-#:logfile: ./log/sidekiq.log
+:pidfile: /var/run/oneacct-export/sidekiq.pid
+:logfile: /var/log/oneacct-export/sidekiq.log
 :queues:
     - oneacct_export

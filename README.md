@@ -15,8 +15,11 @@ Exporting OpenNebula accounting data.
 
 ##Installation
 ###From distribution specific packages
-Distribution specific packages can be created with [omnibus packaging for OneacctExport](https://github.com/EGI-FCTF/omnibus-oneacct-export). When installing via packages you don't have to install neither ruby nor 
-rubygems. Packages contain embedded ruby and all the necessary gems and libraries witch will not effect your system ruby, gems and libraries. 
+Distribution specific packages can be created with
+[omnibus packaging for OneacctExport](https://github.com/EGI-FCTF/omnibus-oneacct-export).
+When installing via packages you don't have to install neither ruby
+nor rubygems. Packages contain embedded ruby and all the necessary gems
+and libraries witch will not effect your system ruby, gems and libraries.
 
 Currently supported distributions:
 
@@ -35,7 +38,8 @@ gem install oneacct-export
 ```
 
 ###From source (dev)
-**Installation from source should never be your first choice! Especially, if you are not familiar with RVM, Bundler, Rake and other dev tools for Ruby!**
+**Installation from source should never be your first choice! Especially, if you are not
+familiar with RVM, Bundler, Rake and other dev tools for Ruby!**
 
 **However, if you wish to contribute to our project, this is the right way to start.**
 
@@ -50,50 +54,81 @@ bundle exec rake spec
 rake install
 ```
 ##Configuration
-###Create a configuration file for OneacctExport
-Configuration file can be read by OneacctExport from these three locations:
+###Create a new user account
+Create or use an existing `apel` user account which will be used to run
+the export process. This account must be the same as the user account
+used by the APEL SSM client.
 
-* ~/.oneacct-export/conf.yml
-* /etc/oneacct-export/conf.yml
-* &lt;PATH_TO_GEM_DIR&gt;/config/conf.yml
- 
-The example configuration file can be found at the last location &lt;PATH_TO_GEM_DIR&gt;/config/conf.yml. When editing a configuration file you have to follow the division into three environments: production, 
-development and test. All the configuration options are described in the example configuration file.
- 
+###Create a configuration file for OneacctExport
+Configuration file can be read by OneacctExport from these
+three locations:
+
+* `~/.oneacct-export/conf.yml`
+* `/etc/oneacct-export/conf.yml`
+* `PATH_TO_GEM_DIR/config/conf.yml`
+
+The example configuration file can be found at the last location
+`PATH_TO_GEM_DIR/config/conf.yml`. When editing a configuration
+file you have to follow the division into three environments: `production`,
+`development` and `test`. All the configuration options are described
+in the example configuration file.
+
 ###Create a configuration file for Sidekiq
-Sidekiq configuration file can be placed anywhere you want since you will provide path to the configuration later during the Sidekiq start. How the Sidekiq configuration should look like and what options you can use 
+Sidekiq configuration file can be placed anywhere you want since you will provide
+path to the configuration later during the Sidekiq start. How the Sidekiq
+configuration should look like and what options you can use
 can be found on its [wiki page](https://github.com/mperham/sidekiq/wiki/Advanced-Options).
- 
-The important thing is to set the same queue name in both OneacctExport and Sidekiq configuration files. OneacctExport is currently supporting adding jobs to only one queue.
- 
+An example is provided in `PATH_TO_GEM_DIR/config/sidekiq.yml`.
+
+The important thing is to set the same queue name in both
+OneacctExport and Sidekiq configuration files. OneacctExport
+is currently supporting adding jobs to only one queue.
+
+###Create required directories
+```bash
+mkdir -p /var/run/oneacct-export
+chown apel:apel /var/run/oneacct-export
+
+mkdir -p /var/log/oneacct-export
+chown apel:apel /var/log/oneacct-export
+```
+
 ###Configure RPC connection
 RPC connection for OpenNebula can be configured in two ways:
 
 * Via OneacctExport configuration file, option xml_rpc and its suboptions
-* Via Opennebula configuration mechanism:
- 
- System environment variable ONE_AUTH contains path to the file containing string in format username:password to authenticate against OpenNebula. If the variable is empty, default file location is ~/.one/one_auth.
- 
- System environment variable ONE_XMLRPC contains URL of OpenNebula RPC gate. If empty, the same information can be stored in ~/.one/one_endpoint
- 
+* Via OpenNebula configuration mechanism:
+
+ System environment variable `ONE_AUTH` contains path to the file containing
+ string in format `username:password` to authenticate against OpenNebula.
+ If the variable is empty, default file location is `~/.one/one_auth`.
+
+ System environment variable `ONE_XMLRPC` contains URL of OpenNebula RPC
+ gate. If empty, the same information can be stored in `~/.one/one_endpoint`.
+
 ###Set Rails environment variable according to your environment
-You have to set system environment variable RAILS_ENV to one of the values production, development or test. OneacctExport is not a Rails application but we chose the Rails variable for easier possible integration in 
+You have to set system environment variable `RAILS_ENV` to one of the
+values production, development or test. OneacctExport is not a Rails
+application but we chose the Rails variable for easier possible integration in
 the future.
 
 ##Usage
 
-**Both Opennebula and Redis server must be running prior the next steps.**
+**Both OpenNebula and Redis server must be running prior the next steps.**
 
 ###Start sidekiq
-First you have to start Sidekiq so it can run the jobs from the queue. Since OneacctExport is not a Rails application Sidekiq has to be started with OneacctExport's worker class as an argument. For example:
+First you have to start Sidekiq so it can run the jobs from the queue. Since
+OneacctExport is not a Rails application Sidekiq has to be started with
+OneacctExport's worker class as an argument. For example:
 
 ```bash
-sidekiq -r <PATH_TO_GEM_DIR>/lib/one_worker.rb -C <PATH_TO_SIDEKIQ_CONF>/sidekiq.yml
+sidekiq -r $PATH_TO_GEM_DIR/lib/one_worker.rb -C $PATH_TO_GEM_DIR/config/sidekiq.yml
 ```
 
 ###Start OneacctExport
 
-OneacctExport is run with executable `oneacct-export`. For a list of all available options run `oneacct-export -h`:
+OneacctExport is run with executable `oneacct-export`. For a list of all
+available options run `oneacct-export -h`:
 
 ```
 $ oneacct-export -h
