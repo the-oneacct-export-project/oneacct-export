@@ -1,10 +1,10 @@
 # OneacctExport
 Exporting OpenNebula accounting data.
 
-[![Build Status](https://secure.travis-ci.org/Misenko/oneacct_export.png)](http://travis-ci.org/Misenko/oneacct_export)
-[![Dependency Status](https://gemnasium.com/Misenko/oneacct_export.png)](https://gemnasium.com/Misenko/oneacct_export)
+[![Build Status](https://secure.travis-ci.org/EGI-FCTF/oneacct_export.png)](http://travis-ci.org/EGI-FCTF/oneacct_export)
+[![Dependency Status](https://gemnasium.com/EGI-FCTF/oneacct_export.png)](https://gemnasium.com/EGI-FCTF/oneacct_export)
 [![Gem Version](https://fury-badge.herokuapp.com/rb/oneacct-export.png)](https://badge.fury.io/rb/oneacct-export)
-[![Code Climate](https://codeclimate.com/github/Misenko/oneacct_export.png)](https://codeclimate.com/github/Misenko/oneacct_export)
+[![Code Climate](https://codeclimate.com/github/EGI-FCTF/oneacct_export.png)](https://codeclimate.com/github/EGI-FCTF/oneacct_export)
 
 
 ##Requirements
@@ -15,7 +15,7 @@ Exporting OpenNebula accounting data.
 
 ##Installation
 ###From distribution specific packages
-Distribution specific packages can be created with [omnibus packaging for OneacctExport](https://github.com/Misenko/omnibus-oneacct-export). When installing via packages you don't have to install neither ruby nor 
+Distribution specific packages can be created with [omnibus packaging for OneacctExport](https://github.com/EGI-FCTF/omnibus-oneacct-export). When installing via packages you don't have to install neither ruby nor 
 rubygems. Packages contain embedded ruby and all the necessary gems and libraries witch will not effect your system ruby, gems and libraries. 
 
 Currently supported distributions:
@@ -42,7 +42,7 @@ gem install oneacct-export
 To build and install the bleeding edge version from master
 
 ```bash
-git clone git://github.com/Misenko/oneacct_export.git
+git clone git://github.com/EGI-FCTF/oneacct_export.git
 cd oneacct_export
 gem install bundler
 bundle install
@@ -115,13 +115,13 @@ Usage oneacct-export [options]
 ```
 
 ##Code Documentation
-[Code Documentation for OneacctExport by YARD](http://rubydoc.info/github/Misenko/oneacct_export/)
+[Code Documentation for OneacctExport by YARD](http://rubydoc.info/github/EGI-FCTF/oneacct_export/)
 
 ##Continuous integration
-[Continuous integration for OneacctExport by Travis-CI](http://travis-ci.org/Misenko/oneacct_export/)
+[Continuous integration for OneacctExport by Travis-CI](http://travis-ci.org/EGI-FCTF/oneacct_export/)
 
 ## Contributing
-1. Fork it ( https://github.com/Misenko/oneacct_export/fork )
+1. Fork it ( https://github.com/EGI-FCTF/oneacct_export/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
