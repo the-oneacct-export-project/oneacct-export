@@ -24,7 +24,7 @@ embedded_oneacct_version=`$omnibus_base_dir/bin/oneacct-export --version`
 embedded_oneacct_dir="$embedded_base_dir/lib/ruby/gems/$embedded_ruby_version/gems/oneacct-export-$embedded_oneacct_version"
 
 user="apel"
-cmd="$omnibus_base_dir/bin/sidekiq -r $embedded_oneacct_dir/lib/one_worker.rb -C $conf_dir/sidekiq.yml"
+cmd="export RAILS_ENV=production ; $omnibus_base_dir/bin/sidekiq -r $embedded_oneacct_dir/lib/one_worker.rb -C $conf_dir/sidekiq.yml"
 
 name=`basename $0`
 pid_file="$run_dir/sidekiq.init.pid"

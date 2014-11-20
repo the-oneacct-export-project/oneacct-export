@@ -16,6 +16,7 @@ if [ -f "$conf_dir/groups.allow" ]; then
     options="$options --include-groups --group-file $conf_dir/groups.allow"
 fi
 
+export RAILS_ENV="production"
 $omnibus_base_dir/bin/oneacct-export $options
 
 exit 0
