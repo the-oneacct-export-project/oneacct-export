@@ -1,0 +1,21 @@
+#!/bin/sh
+
+conf_dir="/etc/oneacct-export"
+omnibus_base_dir="/opt/oneacct-export"
+
+week_start_epoch=$((`date +%s`-604800))
+week_start_date=`date -d @$week_start_epoch +%F`
+
+options="--records-from $week_start_date --blocking --timeout 2700"
+
+if [ -f "$conf_dir/compat.one" ]; then
+    options="$options --compatibility-mode"
+fi
+
+if [ -f "$conf_dir/groups.allow" ]; then
+    options="$options --include-groups --group-file $conf_dir/groups.allow"
+fi
+
+$omnibus_base_dir/bin/oneacct-export $options
+
+exit 0

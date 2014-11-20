@@ -1,0 +1,65 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          oneacct-export-cron
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Enable hourly run of oneacct-export
+# Description:       This shell script enables the automatic use of oneacct-export
+### END INIT INFO
+
+# source function library
+. /lib/lsb/init-functions
+
+lockfile=/var/lock/oneacct-export-cron
+retval=0
+
+start() {
+    touch $lockfile
+    log_success_msg "Enabling periodic oneacct-export"
+    retval=0
+}
+
+stop() {
+    rm -f $lockfile
+    log_success_msg "Disabling periodic oneacct-export"
+    retval=0
+}
+
+restart() {
+    stop
+    start
+}
+
+case "$1" in
+    start)
+    start
+    ;;
+    stop)
+    stop
+    ;;
+    restart|force-reload)
+    restart
+    ;;
+    reload)
+    ;;
+    condrestart)
+    [ -f "$lockfile" ] && restart
+    ;;
+    status)
+    if [ -f $lockfile ] ; then
+        log_success_msg "Periodic oneacct-export is enabled"
+        retval=0
+    else
+        log_success_msg "Periodic oneacct-export is disabled"
+        retval=3
+    fi
+    ;;
+    *)
+    echo "Usage: $0 {start|stop|status|restart|reload|force-reload|condrestart}"
+    retval=1
+esac
+
+exit $retval
