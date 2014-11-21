@@ -44,7 +44,7 @@ if options.groups_file
   if File.exist?(options.groups_file) && File.readable?(options.groups_file)
     file = File.open(options.groups_file, 'r')
     file.each_line do |line|
-      groups[groups.keys.first] << line
+      groups[groups.keys.first] << line.strip
     end
     file.close
   else

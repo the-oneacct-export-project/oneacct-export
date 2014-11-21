@@ -30,12 +30,14 @@ class OneacctOpts
       opts.on('--include-groups GROUP1[,GROUP2,...]', Array,
               'Retrieves only records of virtual machines which '\
               'belong to the specified groups') do |groups|
+        groups = [] unless groups
         options.include_groups = groups
       end
 
       opts.on('--exclude-groups GROUP1[,GROUP2,...]', Array,
               'Retrieves only records of virtual machines which '\
               "don't belong to the specified groups") do |groups|
+        groups = [] unless groups
         options.exclude_groups = groups
       end
 
