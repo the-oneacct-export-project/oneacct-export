@@ -10,21 +10,19 @@
 # Description:       This shell script enables the automatic use of oneacct-export
 ### END INIT INFO
 
-# source function library
-. /lib/lsb/init-functions
-
-lockfile=/var/lock/oneacct-export-cron
+lockfile="/var/lock/oneacct-export-cron"
 retval=0
+name=`basename $0`
 
 start() {
     touch $lockfile
-    log_success_msg "Enabling periodic oneacct-export"
+    echo "Enabling periodic $name"
     retval=0
 }
 
 stop() {
     rm -f $lockfile
-    log_success_msg "Disabling periodic oneacct-export"
+    echo "Disabling periodic $name"
     retval=0
 }
 
@@ -49,11 +47,11 @@ case "$1" in
     [ -f "$lockfile" ] && restart
     ;;
     status)
-    if [ -f $lockfile ] ; then
-        log_success_msg "Periodic oneacct-export is enabled"
+    if [ -f "$lockfile" ] ; then
+        echo "Periodic $name is enabled"
         retval=0
     else
-        log_success_msg "Periodic oneacct-export is disabled"
+        echo "Periodic $name is disabled"
         retval=3
     fi
     ;;
