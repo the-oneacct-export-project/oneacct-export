@@ -127,7 +127,6 @@ class OneacctOpts
         Settings['output'] && Settings.output['output_dir'] && Settings.output['output_type']
       fail ArgumentError, 'Missing some mandatory parameters. Check your configuration file.'
     end
-    Settings['endpoint'].chop! if Settings['endpoint'].end_with?('/')
 
     #make sure log file is specified while loggin to file
     if Settings['logging'] && Settings.logging['log_type'] == 'file' &&

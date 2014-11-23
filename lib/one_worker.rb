@@ -25,7 +25,7 @@ class OneWorker
   # Prepare data that are common for every virtual machine
   def common_data
     common_data = {}
-    common_data['endpoint'] = Settings['endpoint']
+    common_data['endpoint'] = Settings['endpoint'].chomp('/')
     common_data['site_name'] = Settings['site_name']
     common_data['cloud_type'] = Settings['cloud_type']
 
