@@ -358,6 +358,7 @@ describe OneWorker do
       before :example do
         data['cpu_count'] = '1'
         data['image_name'] = 'NULL'
+        data['memory'] = '0'
       end
 
       let(:filename) { 'one_worker_TEMPLATE_missing.xml' }

@@ -61,7 +61,6 @@
     <FEATURES>
       <ACPI><![CDATA[no]]></ACPI>
     </FEATURES>
-    <MEMORY><![CDATA[1024]]></MEMORY>
     <NAME><![CDATA[one-36551]]></NAME>
     <NIC>
       <BRIDGE><![CDATA[xenbr0]]></BRIDGE>
