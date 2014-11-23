@@ -168,6 +168,10 @@ class OneWorker
     rstime = 0
     vm.each 'HISTORY_RECORDS/HISTORY' do |h|
       next unless h['RSTIME'] && h['RETIME'] && h['RETIME'] != '0' && h['RSTIME'] != '0'
+      if h['RETIME'] == '0'
+        rstime += Time.now.to_i - h['RSTIME'].to_i
+        next
+      end
       if h['RSTIME'].to_i > h['RETIME'].to_i
         logger.warn('Skipping malformed record. '\
                     "VM with id #{vm['ID']} has wrong CpuDuration.")
