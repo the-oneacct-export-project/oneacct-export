@@ -607,10 +607,14 @@ describe OneWorker do
     end
 
     context 'vm with RETIME that is 0' do
+      before :example do
+        allow(Time).to receive(:now) { 1383741716 }
+      end
+
       let(:filename) { 'one_worker_RETIME_0.xml' }
 
-      it 'returns 0' do
-        expect(subject.sum_rstime(vm)).to eq(0)
+      it 'returns difference between current time and start of the virtual machine' do
+        expect(subject.sum_rstime(vm)).to eq(42)
       end
     end
 
