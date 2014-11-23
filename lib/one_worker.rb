@@ -125,15 +125,14 @@ class OneWorker
     suspend = (end_time - start_time) - data['duration'].to_i unless end_time == 0
     data['suspend'] = parse(suspend.to_s, NUMBER)
 
-    vcpu = vm['TEMPLATE/VCPU']
-    data['cpu_count'] = parse(vcpu, NON_ZERO, '1')
+    data['cpu_count'] = parse(vm['TEMPLATE/VCPU'], NON_ZERO, '1')
 
     net_tx = parse(vm['NET_TX'], NUMBER, 0)
     data['network_inbound'] = (net_tx.to_i / B_IN_GB).round
     net_rx = parse(vm['NET_RX'], NUMBER, 0)
     data['network_outbound'] = (net_rx.to_i / B_IN_GB).round
 
-    data['memory'] = parse(vm['MEMORY'], NUMBER, '0')
+    data['memory'] = parse(vm['TEMPLATE/MEMORY'], NUMBER, '0')
 
     data['image_name'] = parse(image_map[vm['TEMPLATE/DISK[1]/IMAGE_ID']], STRING, nil)
     data['image_name'] = parse(mixin(vm), STRING) unless data['image_name']
