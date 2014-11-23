@@ -13,7 +13,7 @@ FQAN: NULL
 <% end -%>
 Status: <%= vm['status']%>
 StartTime: <%= vm['start_time'].to_i%>
-EndTime: <%= vm['end_time'].to_i%>
+EndTime: <%= vm['end_time'].to_s == vm['end_time'] ? vm['end_time'] : vm['end_time'].to_i%>
 SuspendDuration: <%= vm['suspend']%>
 WallDuration: <%= vm['duration']%>
 CpuDuration: <%= vm['duration']%>
