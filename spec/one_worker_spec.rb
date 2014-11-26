@@ -536,6 +536,19 @@ describe OneWorker do
       end
     end
 
+    context 'vm without IMAGE_ID mapping' do
+      before :example do
+        data['image_name'] = '31'
+      end
+
+      let(:image_map) { { 'non_existing_id' => 'name' } }
+      let(:filename) { 'one_worker_valid_machine.xml' }
+
+      it 'replaces image name with IMAGE_ID' do
+        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+      end
+    end
+
     context 'vm with USER_TEMPLATE/OCCI_COMPUTE_MIXINS' do
       let(:filename) { 'one_worker_vm4.xml' }
       let(:image_name) { 'http://occi.localhost/occi/infrastructure/os_tpl#uuid_monitoring_20' }
