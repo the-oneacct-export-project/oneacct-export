@@ -31,15 +31,36 @@ omnibus_base_dir="/opt/oneacct-export"
 week_start_epoch=$((`date +%s`-604800))
 week_start_date=`date -d @$week_start_epoch +%F`
 
-options="--records-from $week_start_date --blocking --timeout 2700"
+if [ "x$1" = "x--all" ] || [ "x$1" = "x-all" ]; then
+    # export all available accounting records
+    options="--blocking --timeout 3600"
+else
+    # export only records from the last 7 days
+    options="--records-from $week_start_date --blocking --timeout 1800"
+fi
 
 if [ -f "$conf_dir/compat.one" ]; then
     options="$options --compatibility-mode"
 fi
 
-if [ -f "$conf_dir/groups.allow" ]; then
-    options="$options --include-groups --group-file $conf_dir/groups.allow"
+if [ -f "$conf_dir/groups.include" ]; then
+    groups_include="YES"
+    options="$options --include-groups --group-file $conf_dir/groups.include"
+fi
+
+if [ -f "$conf_dir/groups.exclude" ]; then
+    if [ "x$groups_include" = "xYES" ]; then
+        echo "'groups.include' and 'groups.exclude' cannot be combined. Pick only one!"
+        exit 1
+    fi
+
+    options="$options --exclude-groups --group-file $conf_dir/groups.exclude"
 fi
 
 export RAILS_ENV="production"
+
+if [ "x$DEBUG" = "x1" ]; then
+    echo "$omnibus_base_dir/bin/oneacct-export $options"
+fi
+
 $omnibus_base_dir/bin/oneacct-export $options
