@@ -37,7 +37,7 @@ fi
 if [ "x$DEBUG" = "x1" ]; then
     ONEACCT_EXPORT_LOG_LEVEL="DEBUG"
 else
-    ONEACCT_EXPORT_LOG_LEVEL="INFO"
+    ONEACCT_EXPORT_LOG_LEVEL="ERROR"
 fi
 
 get_pid() {
