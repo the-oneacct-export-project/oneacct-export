@@ -57,10 +57,16 @@ if [ -f "$conf_dir/groups.exclude" ]; then
     options="$options --exclude-groups --group-file $conf_dir/groups.exclude"
 fi
 
+if [ "x$DEBUG" = "x1" ]; then
+    export ONEACCT_EXPORT_LOG_LEVEL="DEBUG"
+    echo "$omnibus_base_dir/bin/oneacct-export $options"
+    echo "(see log files in /var/log/oneacct-export for details)"
+fi
+
 export RAILS_ENV="production"
 
-if [ "x$DEBUG" = "x1" ]; then
-    echo "$omnibus_base_dir/bin/oneacct-export $options"
+if [ "x$SSL_CERT_DIR" = "x" ]; then
+    export SSL_CERT_DIR="/etc/grid-security/certificates"
 fi
 
 $omnibus_base_dir/bin/oneacct-export $options

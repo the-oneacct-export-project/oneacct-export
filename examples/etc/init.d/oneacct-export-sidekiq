@@ -30,6 +30,16 @@ stderr_log="$log_dir/sidekiq.init.stderr.log"
 
 retval=0
 
+if [ "x$SSL_CERT_DIR" = "x" ]; then
+    SSL_CERT_DIR="/etc/grid-security/certificates"
+fi
+
+if [ "x$DEBUG" = "x1" ]; then
+    ONEACCT_EXPORT_LOG_LEVEL="DEBUG"
+else
+    ONEACCT_EXPORT_LOG_LEVEL="INFO"
+fi
+
 get_pid() {
     cat "$pid_file"
 }
@@ -45,7 +55,7 @@ start() {
         echo "Starting $name ..."
 
         cd "$run_dir"
-        sudo -u "$user" RAILS_ENV=production $cmd >> "$stdout_log" 2>> "$stderr_log" &
+        sudo -u "$user" RAILS_ENV=production SSL_CERT_DIR=$SSL_CERT_DIR ONEACCT_EXPORT_LOG_LEVEL=$ONEACCT_EXPORT_LOG_LEVEL $cmd >> "$stdout_log" 2>> "$stderr_log" &
 
         echo $! > "$pid_file"
         if ! is_running; then
