@@ -194,7 +194,7 @@ class OneWorker
 
     vms = vms.split('|')
 
-    oda = OneDataAccessor.new(logger)
+    oda = OneDataAccessor.new(false, logger)
     user_map = create_user_map(oda)
     image_map = create_image_map(oda)
 
