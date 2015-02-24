@@ -524,6 +524,15 @@ describe OneWorker do
       end
     end
 
+    context 'vm with TEMPLATE/DISK/VMCATCHER_EVENT_AD_MPURI' do
+      let(:filename) { 'one_worker_vm7.xml'}
+      let(:image_name) { 'https://appdb.egi.eu/store/vo/image/662b0e71-3e21-5f43-b6a1-cc2f51319fa7:156/' }
+
+      it 'uses TEMPLATE/DISK/VMCATCHER_EVENT_AD_MPURI for image id mapping' do
+        expect(subject.process_vm(vm, user_map, image_map)['image_name']).to eq(image_name)
+      end
+    end
+
     context 'vm without IMAGE_ID' do
       before :example do
         data['image_name'] = 'NULL'

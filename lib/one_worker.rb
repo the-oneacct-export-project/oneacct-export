@@ -134,7 +134,8 @@ class OneWorker
 
     data['memory'] = parse(vm['TEMPLATE/MEMORY'], NUMBER, '0')
 
-    data['image_name'] = parse(image_map[vm['TEMPLATE/DISK[1]/IMAGE_ID']], STRING, nil)
+    data['image_name'] = parse(vm['TEMPLATE/DISK[1]/VMCATCHER_EVENT_AD_MPURI'], STRING, nil)
+    data['image_name'] = parse(image_map[vm['TEMPLATE/DISK[1]/IMAGE_ID']], STRING, nil) unless data['image_name']
     data['image_name'] = parse(mixin(vm), STRING, nil) unless data['image_name']
     data['image_name'] = parse(vm['TEMPLATE/DISK[1]/IMAGE_ID'], STRING) unless data['image_name']
 
