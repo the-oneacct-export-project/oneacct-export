@@ -178,6 +178,7 @@ describe OneWorker do
       data['network_outbound'] = 0
       data['memory'] = '1736960'
       data['image_name'] = 'image_name'
+      data['disk_size'] = 'NULL'
 
       data
     end
@@ -596,6 +597,57 @@ describe OneWorker do
         expect(subject.process_vm(vm, user_map, image_map)['user_name']).to eq(user_name)
       end
     end
+
+    context 'vm with DISK SIZEs' do
+      before :example do
+        data['disk_size'] = 53
+      end
+
+      let(:filename) { 'one_worker_vm9.xml' }
+
+      it 'correctly sums disk sizes' do
+        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+      end
+    end
+  end
+
+  describe '.sum_disk_size' do
+    let(:vm) do
+      xml = File.read("#{GEM_DIR}/mock/#{filename}")
+      OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))
+    end
+
+    context 'vm with DISK without SIZE' do
+      let(:filename) { 'one_worker_valid_machine.xml' }
+
+      it 'returns NULL' do
+        expect(subject.sum_disk_size(vm)).to eq('NULL')
+      end
+    end
+
+    context 'vm with DISK with invalid SIZE' do
+      let(:filename) { 'one_worker_DISK_SIZE_nan.xml' }
+
+      it 'returns NULL' do
+        expect(subject.sum_disk_size(vm)).to eq('NULL')
+      end
+    end
+
+    context 'vm with single DISK and valid SIZE' do
+      let(:filename) { 'one_worker_vm7.xml' }
+
+      it 'return correct disk size' do
+        expect(subject.sum_disk_size(vm)).to eq(11)
+      end
+    end
+
+    context 'vm with multiple DISKs and valid SIZE' do
+      let(:filename) { 'one_worker_vm8.xml' }
+
+      it 'return correct disk size' do
+        expect(subject.sum_disk_size(vm)).to eq(53)
+      end
+    end
   end
 
   describe '.sum_rstime' do
@@ -697,6 +749,7 @@ describe OneWorker do
       data['network_outbound'] = 0
       data['memory'] = '1736960'
       data['image_name'] = 'image_name'
+      data['disk_size'] = 'NULL'
 
       data
     end

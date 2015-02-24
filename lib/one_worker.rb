@@ -139,6 +139,8 @@ class OneWorker
     data['image_name'] = parse(mixin(vm), STRING, nil) unless data['image_name']
     data['image_name'] = parse(vm['TEMPLATE/DISK[1]/IMAGE_ID'], STRING) unless data['image_name']
 
+    data['disk_size'] = sum_disk_size(vm)
+
     data
   end
 
@@ -184,6 +186,28 @@ class OneWorker
     end
 
     rstime
+  end
+
+  # Sums disk size of all disks within the virtual machine
+  #
+  # @param [OpenNebula::VirtualMachine] vm virtual machine
+  #
+  # @return [Integer] sum of disk sizes in GB rounded up
+  def sum_disk_size(vm)
+    disk_size = 'NULL'
+    vm.each 'TEMPLATE/DISK' do |disk|
+      return 'NULL' unless disk['SIZE']
+
+      size = parse(disk['SIZE'], NUMBER, nil)
+      unless size
+        logger.warn("Disk size invalid for VM with id #{vm['ID']}.")
+        return 'NULL'
+      end
+      disk_size = disk_size.to_i + size.to_i
+    end
+
+    disk_size = (disk_size/1000.0).ceil unless disk_size.to_i == 0
+    disk_size
   end
 
   # Sidekiq specific method, specifies the purpose of the worker
