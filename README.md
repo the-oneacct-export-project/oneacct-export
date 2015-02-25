@@ -106,6 +106,16 @@ RPC connection for OpenNebula can be configured in two ways:
  System environment variable `ONE_XMLRPC` contains URL of OpenNebula RPC
  gate. If empty, the same information can be stored in `~/.one/one_endpoint`.
 
+###Configure vmcatcher IMAGE attribute inheritance in OpenNebula
+In `oned.conf`:
+~~~
+INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_AD_MPURI"
+INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_DC_IDENTIFIER"
+INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_IL_DC_IDENTIFIER"
+INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_SL_CHECKSUM_SHA512"
+INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_HV_VERSION"
+~~~
+
 ###Set Rails environment variable according to your environment
 You have to set system environment variable `RAILS_ENV` to one of the
 values production, development or test. OneacctExport is not a Rails
