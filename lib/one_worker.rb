@@ -213,8 +213,8 @@ class OneWorker
   # Sidekiq specific method, specifies the purpose of the worker
   #
   # @param [String] vms IDs of virtual machines to process in form of numbers separated by '|' (easier for cooperation with redis)
-  # @param [String] output output directory
-  def perform(vms, output)
+  # @param [String] file_number number of the output file
+  def perform(vms, file_number)
     OneacctExporter::Log.setup_log_level(logger)
 
     vms = vms.split('|')
@@ -237,16 +237,16 @@ class OneWorker
       data << vm_data
     end
 
-    write_data(data, output)
+    write_data(data, file_number)
   end
 
   # Write processed data into output directory
-  def write_data(data, output)
+  def write_data(data, file_number)
     logger.debug('Creating writer...')
-    ow = OneWriter.new(data, output, logger)
+    ow = OneWriter.new(data, file_number, logger)
     ow.write
   rescue => e
-    msg = "Cannot write result to #{output}: #{e.message}"
+    msg = "Cannot write result: #{e.message}"
     logger.error(msg)
     raise msg
   end
