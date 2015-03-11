@@ -7,6 +7,11 @@ defaults: &defaults
     output_dir: /var/spool/apel/outgoing/00000000 # Directory for outgoing messages
     output_type: apel-0.2 # Format of outgoing messages. apel-0.2 is currently the only option
     num_of_vms_per_file: 500 # Maximum number of virtual machine records per one output file
+#    pbs: # Options for pbs output format
+#      realm: META # Owner's relm
+#      queue: cloud # Queue name
+#      scratch_type: local #data store type
+#      host_identifier: on_localhost #identifier for host opennebula is running on
   logging:
     log_type: file # Two options: file, syslog. Defaults to stdout
     log_file: /var/log/oneacct-export/oneacct-export.log # Used when type file selected

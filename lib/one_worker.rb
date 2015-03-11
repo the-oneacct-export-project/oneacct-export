@@ -20,7 +20,10 @@ class OneWorker
   STRING = /[[:print:]]+/
   NUMBER = /[[:digit:]]+/
   NON_ZERO = /[1-9][[:digit:]]*/
+
   STATES = %w(started started suspended started suspended suspended completed completed suspended)
+
+  PBS_OT = 'pbs-0.1'
 
   # Prepare data that are common for every virtual machine
   def common_data
@@ -28,8 +31,26 @@ class OneWorker
     common_data['endpoint'] = Settings['endpoint'].chomp('/')
     common_data['site_name'] = Settings['site_name']
     common_data['cloud_type'] = Settings['cloud_type']
+    common_data.merge!(output_type_specific_data)
 
     common_data
+  end
+
+  def output_type_specific_data
+    data = {}
+    if Settings.output['output_type'] == PBS_OT && Settings.output['pbs']
+      data['realm'] = Settings.output.pbs['realm']
+      data['pbs_queue'] = Settings.output.pbs['queue']
+      data['scratch_type'] = Settings.output.pbs['scratch_type']
+      data['host'] = Settings.output.pbs['host_identifier']
+    end
+
+    data['realm'] = 'META' unless data['realm']
+    data['pbs_queue'] = 'cloud' unless data['pbs_queue']
+    data['scratch_type'] = 'local' unless data['pbs_scratch_type']
+    data['host'] = 'on_localhost' unless data['host']
+
+    data
   end
 
   # Create mapping of user ID and specified element
@@ -53,9 +74,9 @@ class OneWorker
     oda.mapping(pool_type, mapping)
   rescue => e
     msg = "Couldn't create map: #{e.message}. "\
-          'Stopping to avoid malformed records.'
-    logger.error(msg)
-    raise msg
+      'Stopping to avoid malformed records.'
+      logger.error(msg)
+      raise msg
   end
 
   # Load virtual machine with specified ID
@@ -101,8 +122,10 @@ class OneWorker
     data['machine_name'] = parse(vm['DEPLOY_ID'], STRING, "one-#{data['vm_uuid']}")
     data['user_id'] = parse(vm['UID'], STRING)
     data['group_id'] = parse(vm['GID'], STRING)
-    data['user_name'] = parse(vm['USER_TEMPLATE/USER_X509_DN'], STRING, nil)
-    data['user_name'] = parse(user_map[data['user_id']], STRING) unless data['user_name']
+    data['user_dn'] = parse(vm['USER_TEMPLATE/USER_X509_DN'], STRING, nil)
+    data['user_dn'] = parse(user_map[data['user_id']], STRING) unless data['user_name']
+    data['user_name'] = parse(vm['UNAME'], STRING)
+    data['group_name'] = parse(vm['GNAME'], STRING)
     data['fqan'] = parse(vm['GNAME'], STRING, nil)
 
     if vm['STATE']
@@ -120,7 +143,7 @@ class OneWorker
     rstime = sum_rstime(vm)
     return nil unless rstime
 
-    data['duration'] = parse(rstime.to_s, NON_ZERO)
+    data['duration'] = Time.at(parse(rstime.to_s, NON_ZERO).to_i)
 
     suspend = (end_time - start_time) - data['duration'].to_i unless end_time == 0
     data['suspend'] = parse(suspend.to_s, NUMBER)
@@ -141,7 +164,32 @@ class OneWorker
 
     data['disk_size'] = sum_disk_size(vm)
 
+    history = history_records(vm)
+    history.last['state'] = 'E' if data['status'] == 'completed'
+    data['history'] = history
+
     data
+  end
+
+  def history_records(vm)
+    history = []
+    vm.each 'HISTORY_RECORDS/HISTORY' do |h|
+      history_record = {}
+      history_record['start_time'] = Time.at(parse(h['STIME'], NUMBER, 0).to_i)
+      history_record['end_time'] = Time.at(parse(h['ETIME'], NUMBER, 0).to_i)
+      history_record['seq'] = parse(h['SEQ'], NUMBER, nil)
+      unless history_record['seq']
+        logger.error('Skipping a malformed record. '\
+                     "VM with id #{vm['ID']} has history record with invalid sequence number.")
+        return nil
+      end
+      history_record['hostname'] = parse(h['HOSTNAME'], STRING)
+      history_record['state'] = 'U'
+
+      history << history_record
+    end
+
+    history
   end
 
   # Look for 'os_tpl' OCCI mixin to better identifie virtual machine's image
@@ -206,7 +254,6 @@ class OneWorker
       disk_size = disk_size.to_i + size.to_i
     end
 
-    disk_size = (disk_size/1000.0).ceil unless disk_size.to_i == 0
     disk_size
   end
 
