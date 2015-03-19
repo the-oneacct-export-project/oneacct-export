@@ -6,6 +6,8 @@ require 'settings'
 
 # Class for parsing command line arguments
 class OneacctOpts
+  include OutputTypes
+
   BLOCKING_DEFAULT = false
   TIMEOUT_DEFAULT = 60 * 60
   COMPATIBILITY_DEFAULT = false
@@ -123,8 +125,7 @@ class OneacctOpts
   # Make sure configuration is sane
   def self.check_settings_restrictions
     #make sure all mandatory parameters are set
-    unless Settings['site_name'] && Settings['cloud_type'] && Settings['endpoint'] &&
-        Settings['output'] && Settings.output['output_dir'] && Settings.output['output_type']
+    unless Settings['output'] && Settings.output['output_dir'] && Settings.output['output_type']
       fail ArgumentError, 'Missing some mandatory parameters. Check your configuration file.'
     end
 
@@ -132,6 +133,20 @@ class OneacctOpts
     if Settings['logging'] && Settings.logging['log_type'] == 'file' &&
         !Settings.logging['log_file']
       fail ArgumentError, 'Missing file for logging. Check your configuration file.'
+    end
+
+    if Settings.output['output_type'] == APEL_OT
+      unless Settings.output['apel'] && Settings.output.apel['site_name'] &&
+          Settings.output.apel['cloud_type'] && Settings.output.apel['endpoint']
+        fail ArgumentError, 'Missing some mandatory parameters. Check your configuration file.'
+      end
+    end
+
+    if Settings.output['output_type'] == PBS_OT && Settings.output['pbs'] 
+      unless Settings.output.pbs['realm'] && Settings.output.pbs['queue'] &&
+          Settings.output.pbs['scratch_type'] && Settings.output.pbs['host_identifier']
+        fail ArgumentError, 'Missing some mandatory parameters. Check your configuration file.'
+      end
     end
 
     #make sure specified template really exists

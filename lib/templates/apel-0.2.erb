@@ -6,8 +6,8 @@ MachineName: <%= vm['machine_name']%>
 LocalUserId: <%= vm['user_id']%>
 LocalGroupId: <%= vm['group_id']%>
 GlobalUserName: <%= vm['user_dn']%>
-<% if vm['fqan']-%>
-FQAN: /<%= vm['fqan']%>/Role=NULL/Capability=NULL
+<% if vm['group_name']-%>
+FQAN: /<%= vm['group_name']%>/Role=NULL/Capability=NULL
 <% else -%>
 FQAN: NULL
 <% end -%>

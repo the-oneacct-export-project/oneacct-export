@@ -94,8 +94,9 @@ class OneacctExporter
   # Clean output directory of previous entries
   def clean_output_dir
     output_dir = Dir.new(Settings.output['output_dir'])
-    output_dir.entries.each do |entry|
-      File.delete("#{Settings.output['output_dir']}/#{entry}") if /[0-9]{14}/ =~ entry
+    entries = output_dir.entries.select {|entry| entry != '.' && entry != '..'}
+    entries.each do |entry|
+      File.delete("#{output_dir.path}/#{entry}")
     end
   end
 end
