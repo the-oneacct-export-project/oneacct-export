@@ -55,7 +55,7 @@ module DataValidators
       fail_validation 'group' unless is_string?(data['group_name'])
       fail_validation 'ppn' unless is_number?(data['cpu_count'])
       fail_validation 'mem' unless is_number?(data['memory'])
-      fail_validation 'HISTORY_RECORDS' if !data['history'] || data['history'].empty?
+      fail_validation 'HISTORY_RECORDS' if (!data['history']) || data['history'].empty?
 
       history = []
       data['history'].each do |h|
@@ -76,7 +76,7 @@ module DataValidators
 
       valid_data['machine_name'] = default(data['machine_name'], :string, "one-#{valid_data['vm_uuid']}")
 
-      duration = sum_rstime(data['history'], valid_data['vm_uuid'])
+      duration = sum_rstime(data['history'], data['status'] == COMPLETED, valid_data['vm_uuid'])
       valid_data['duration'] = Time.at(duration)
 
       valid_data['disk_size'] = sum_disk_size(data['disks'], valid_data['vm_uuid'])

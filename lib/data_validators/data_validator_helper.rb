@@ -13,4 +13,3 @@ module DataValidators
     end
   end
 end
-

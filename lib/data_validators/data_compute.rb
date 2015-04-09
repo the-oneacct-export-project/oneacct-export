@@ -4,18 +4,20 @@ module DataValidators
     # Sums RSTIME (time when virtual machine was actually running)
     #
     # @param [Array] history records
+    # @param [Boolean] completed whether vm was completed or not
+    # @param [Fixnum] vm_id vm's id
     #
-    # @return [Integer] RSTIME
-    def sum_rstime(history_records, vm_id)
+    # @return [Integer] sum of time when virtual machine was actually running
+    def sum_rstime(history_records, completed, vm_id)
       rstime = 0
       history_records.each do |record|
         next unless default(record['rstart_time'], :nzn, nil) && default(record['rend_time'], :number, nil)
         rstart_time = record['rstart_time'].to_i
         rend_time = record['rend_time'].to_i
 
-        if rend_time > 0 && rstart_time > rend_time
+        if (rend_time > 0 && rstart_time > rend_time) || (rend_time == 0 && completed)
           fail Errors::ValidationError, 'Skipping a malformed record. '\
-            "History records are invalid for vm with id #{vm_id}."
+            "History records' times are invalid for vm with id #{vm_id}."
         end
 
         rend_time = rend_time == 0 ? Time.now.to_i : rend_time
@@ -36,7 +38,7 @@ module DataValidators
       disks.each do |disk|
         size = default(disk['size'], :number, nil)
         unless size
-          log.warn("Disk size invalid for validated vm with id #{vm_id}")
+          log.warn("Disk size invalid for vm with id #{vm_id}")
           return nil
         end
 

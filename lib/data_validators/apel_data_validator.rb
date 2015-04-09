@@ -75,9 +75,9 @@ module DataValidators
       status = default(data['status'], :number, nil)
       valid_data['status'] = status ? STATES[status.to_i] : 'NULL'
 
-      fail_validation 'HISTORY_RECORDS' if !data['history'] || data['history'].empty?
+      fail_validation 'HISTORY_RECORDS' if (!data['history']) || data['history'].empty?
 
-      duration = sum_rstime(data['history'], valid_data['vm_uuid'])
+      duration = sum_rstime(data['history'], valid_data['status'] == 'completed', valid_data['vm_uuid'])
       valid_data['duration'] = Time.at(duration)
       valid_data['suspend'] = end_time == 0 ? 'NULL' : (end_time - start_time) - duration
       valid_data['cpu_count'] = default(data['cpu_count'], :nzn, '1')
