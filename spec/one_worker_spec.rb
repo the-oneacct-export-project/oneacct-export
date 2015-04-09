@@ -6,17 +6,36 @@ describe OneWorker do
   let(:one_worker) { OneWorker.new }
   let(:oda) { double('oda') }
 
-  describe '.common_data' do
-    before :example do
-      Settings['endpoint'] = 'machine.hogwarts.co.uk'
-      Settings['site_name'] = 'Hogwarts'
-      Settings['cloud_type'] = 'OpenNebula'
+  describe '.output_type_specific_data' do
+    context 'with output type apel' do
+      before :example do
+        Settings.output['output_type'] = 'apel-0.2'
+        Settings.output.apel['endpoint'] = 'machine.hogwarts.co.uk'
+        Settings.output.apel['site_name'] = 'Hogwarts'
+        Settings.output.apel['cloud_type'] = 'OpenNebula'
+      end
+
+      let(:output_type_specific_data) { {'endpoint' => 'machine.hogwarts.co.uk', 'site_name' => 'Hogwarts', 'cloud_type' => 'OpenNebula'} }
+
+      it 'returns data specific for apel output type in form of hash' do
+        expect(subject.output_type_specific_data).to eq(output_type_specific_data)
+      end
     end
 
-    let(:common_data) { { 'endpoint' => 'machine.hogwarts.co.uk', 'site_name' => 'Hogwarts', 'cloud_type' => 'OpenNebula' } }
+    context 'with output type pbs' do
+      before :example do
+        Settings.output['output_type'] = 'pbs-0.1'
+        Settings.output.pbs['realm'] = 'REALM'
+        Settings.output.pbs['queue'] = 'cloud'
+        Settings.output.pbs['scratch_type'] = 'local'
+        Settings.output.pbs['host_identifier'] = 'on_localhost'
+      end
 
-    it 'returns data common for every vm in form of hash' do
-      expect(subject.common_data).to eq(common_data)
+      let(:output_type_specific_data) { {'realm' => 'REALM', 'pbs_queue' => 'cloud', 'scratch_type' => 'local', 'host' => 'on_localhost'} }
+
+      it 'returns data specific for pbs output type in form of hash' do
+        expect(subject.output_type_specific_data).to eq(output_type_specific_data)
+      end
     end
   end
 
@@ -83,38 +102,6 @@ describe OneWorker do
     end
   end
 
-  describe '.parse' do
-    let(:regex) { /[[:digit:]]+/ }
-
-    context 'with three parameters' do
-      context 'if regex matches the value' do
-        it 'returns the value' do
-          expect(subject.parse('42', regex, '0')).to eq('42')
-        end
-      end
-
-      context 'if regex does not match the value' do
-        it 'it returns substitute' do
-          expect(subject.parse('abc', regex, '0')).to eq('0')
-        end
-      end
-    end
-
-    context 'with two parameters' do
-      context 'if regex matches the value' do
-        it 'returns the value' do
-          expect(subject.parse('42', regex)).to eq('42')
-        end
-      end
-
-      context 'if regex does not match the value' do
-        it 'returns "NULL"' do
-          expect(subject.parse('abc', regex)).to eq('NULL')
-        end
-      end
-    end
-  end
-
   describe 'write_data' do
     before :example do
       expect(OneWriter).to receive(:new).with(data, output, anything) { ow }
@@ -145,11 +132,12 @@ describe OneWorker do
     end
   end
 
-  describe '.process_vm' do
+  describe 'process_vm' do
     before :example do
-      Settings['endpoint'] = 'machine.hogwarts.co.uk'
-      Settings['site_name'] = 'Hogwarts'
-      Settings['cloud_type'] = 'OpenNebula'
+      Settings.output['output_type'] = 'apel-0.2'
+      Settings.output.apel['endpoint'] = 'machine.hogwarts.co.uk'
+      Settings.output.apel['site_name'] = 'Hogwarts'
+      Settings.output.apel['cloud_type'] = 'OpenNebula'
     end
 
     let(:vm) do
@@ -159,642 +147,351 @@ describe OneWorker do
 
     let(:data) do
       data = {}
+
       data['endpoint'] = 'machine.hogwarts.co.uk'
       data['site_name'] = 'Hogwarts'
       data['cloud_type'] = 'OpenNebula'
+
       data['vm_uuid'] = '36551'
-      data['start_time'] = Time.at(1383741160)
-      data['end_time'] = Time.at(1383742270)
+      data['start_time'] = '1383741160'
+      data['end_time'] = '1383742270'
       data['machine_name'] = 'one-36551'
       data['user_id'] = '120'
       data['group_id'] = '0'
-      data['user_name'] = 'user_name'
-      data['fqan'] = 'gname'
-      data['status'] = 'completed'
-      data['duration'] = '596'
-      data['suspend'] = '514'
+      data['user_name'] = 'uname'
+      data['group_name'] = 'gname'
+      data['status'] = '6'
       data['cpu_count'] = '1'
-      data['network_inbound'] = 0
-      data['network_outbound'] = 0
+      data['network_inbound'] = '43557888'
+      data['network_outbound'] = '376832'
       data['memory'] = '1736960'
-      data['image_name'] = 'image_name'
-      data['disk_size'] = 'NULL'
+      history = []
+      rec = {}
+      rec['start_time'] = '1383741169'
+      rec['end_time'] = '1383741259'
+      rec['rstart_time'] = '0'
+      rec['rend_time'] = '0'
+      rec['seq'] = '0'
+      rec['hostname'] = 'supermachine1.somewhere.com'
+      history << rec
+      rec = {}
+      rec['start_time'] = '1383741589'
+      rec['end_time'] = '1383742270'
+      rec['rstart_time'] = '1383741674'
+      rec['rend_time'] = '1383742270'
+      rec['seq'] = '1'
+      rec['hostname'] = 'supermachine2.somewhere.com'
+      history << rec
+      data['history'] = history
+      data['disks'] = [{'size' => '10240'}, {'size' => '42368'}]
+
+      data['user_dn'] = '/Dn=FrOm/CN=DN/CN=TeMpLaTe'
+      data['image_name'] = 'https://appdb.egi.eu/store/vo/image/image_name_from_VMCATCHER_EVENT_AD_MPURI_tag/'
 
       data
     end
 
-    let(:user_map) { { '120' => 'user_name' } }
-    let(:image_map) { { '31' => 'image_name' } }
+    let(:user_map) { {'120' => '/Dn=FrOm/CN=DN/CN=MaP'} }
+    let(:image_map) { {'31' => 'image_name_from_map'} }
 
-    context 'with valid vm' do
-      let(:filename) { 'one_worker_valid_machine.xml' }
+    context 'with apel specific data' do
+      let(:filename) { 'one_worker_vm_dn01.xml' }
 
-      it 'returns correct vm data' do
+      it 'returns correct vm data with apel specific data' do
         expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
       end
     end
 
-    context 'vm without STIME' do
-      let(:filename) { 'one_worker_STIME_missing.xml' }
-
-      it 'returns nil' do
-        expect(subject.process_vm(vm, user_map, image_map)).to be_nil
-      end
-    end
-
-    context 'vm with STIME that is not a number' do
-      let(:filename) { 'one_worker_STIME_nan.xml' }
-
-      it 'returns nil' do
-        expect(subject.process_vm(vm, user_map, image_map)).to be_nil
-      end
-    end
-
-    context 'vm without ETIME' do
+    context 'with pbs specific data' do
       before :example do
-        data['end_time'] = 'NULL'
-        data['suspend'] = 'NULL'
+        Settings.output['output_type'] = 'pbs-0.1'
+        Settings.output.pbs['realm'] = 'REALM'
+        Settings.output.pbs['queue'] = 'cloud'
+        Settings.output.pbs['scratch_type'] = 'local'
+        Settings.output.pbs['host_identifier'] = 'on_localhost'
+
+        data['realm'] = 'REALM'
+        data['pbs_queue'] = 'cloud'
+        data['scratch_type'] = 'local'
+        data['host'] = 'on_localhost'
+
+        data.delete 'endpoint'
+        data.delete 'site_name'
+        data.delete 'cloud_type'
       end
 
-      let(:filename) { 'one_worker_ETIME_missing.xml' }
+      let(:filename) { 'one_worker_vm_dn01.xml' }
 
-      it 'replaces ETIME with "NULL"' do
+      it 'returns correct vm data with pbs specific data' do
         expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
       end
     end
 
-    context 'vm with ETIME that is not a number' do
+    context 'with user\'s dn in template' do
+      let(:filename) { 'one_worker_vm_dn01.xml' }
+
+      it 'returns correct vm data with user\'s dn from template' do
+        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+      end
+    end
+
+    context 'with user\'s dn in map' do
+      let(:filename) { 'one_worker_vm_dn02.xml' }
+
       before :example do
-        data['end_time'] = 'NULL'
-        data['suspend'] = 'NULL'
+        data['user_dn'] = '/Dn=FrOm/CN=DN/CN=MaP'
       end
 
-      let(:filename) { 'one_worker_ETIME_nan.xml' }
-
-      it 'replaces ETIME with "NULL"' do
+      it 'returns correct vm data with user\'s dn from map' do
         expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
       end
     end
 
-    context 'vm ETIME that is 0' do
+    context 'with image name in VMCATCHER_EVENT_AD_MPURI tag' do
+      let(:filename) { 'one_worker_vm_image_name01.xml' }
+
+      it 'returns correct vm data with image name from VMCATCHER_EVENT_AD_MPURI tag' do
+        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+      end
+    end
+
+    context 'with image name in map' do
+      let(:filename) { 'one_worker_vm_image_name02.xml' }
+
       before :example do
-        data['end_time'] = 'NULL'
-        data['suspend'] = 'NULL'
+        data['image_name'] = 'image_name_from_map'
       end
 
-      let(:filename) { 'one_worker_ETIME_0.xml' }
-
-      it 'replaces ETIME with "NULL"' do
+      it 'returns correct vm data with image name from map' do
         expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
       end
     end
 
-    context 'vm with STIME bigger than ETIME' do
-      let(:filename) { 'one_worker_STIME_>_ETIME.xml' }
+    #TODO should be moved into tests for mixin method
+    context 'with image name in USER_TEMPLATE/OCCI_COMPUTE_MIXINS tag' do
+      let(:filename) { 'one_worker_vm_image_name03.xml' }
 
-      it 'returns nil' do
-        expect(subject.process_vm(vm, user_map, image_map)).to be_nil
-      end
-    end
-
-    context 'vm without DEPLOY_ID' do
-      let(:filename) { 'one_worker_DEPLOY_ID_missing.xml' }
-
-      it 'replaces machine name with string created from id and prefix "one-"' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm without UID' do
       before :example do
-        data['user_id'] = 'NULL'
-        data['user_name'] = 'NULL'
+        data['image_name'] = 'http://occi.localhost/occi/infrastructure/os_tpl#image_name_from_USER_TEMPLATE_OCCI_COMPUTE_MIXINS'
       end
 
-      let(:filename) { 'one_worker_UID_missing.xml' }
-
-      it 'replaces user id with "NULL"' do
+      it 'returns correct vm data with image name from USER_TEMPLATE/OCCI_COMPUTE_MIXINS tag' do
         expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
       end
     end
 
-    context 'vm without GID' do
+    #TODO should be moved into tests for mixin method
+    context 'with image name in USER_TEMPLATE/OCCI_MIXIN tag' do
+      let(:filename) { 'one_worker_vm_image_name04.xml' }
+
       before :example do
-        data['group_id'] = 'NULL'
+        data['image_name'] = 'http://occi.localhost/occi/infrastructure/os_tpl#image_name_from_USER_TEMPLATE_OCCI_MIXIN'
       end
 
-      let(:filename) { 'one_worker_GID_missing.xml' }
-
-      it 'replaces group id with "NULL"' do
+      it 'returns correct vm data with image name from USER_TEMPLATE/OCCI_MIXIN tag' do
         expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
       end
     end
 
-    context 'vm without GNAME' do
+    #TODO should be moved into tests for mixin method
+    context 'with image name in TEMPLATE/OCCI_MIXIN tag' do
+      let(:filename) { 'one_worker_vm_image_name05.xml' }
+
       before :example do
-        data['fqan'] = nil
+        data['image_name'] = 'http://occi.localhost/occi/infrastructure/os_tpl#image_name_from_TEMPLATE_OCCI_MIXIN'
       end
 
-      let(:filename) { 'one_worker_GNAME_missing.xml' }
-
-      it 'sets fqan to nil' do
+      it 'returns correct vm data with image name from TEMPLATE/OCCI_MIXIN tag' do
         expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
       end
     end
 
-    context 'vm without STATE' do
+    context 'with image name as image id' do
+      let(:filename) { 'one_worker_vm_image_name06.xml' }
+
       before :example do
-        data['status'] = 'NULL'
+        data['image_name'] = '42'
       end
 
-      let(:filename) { 'one_worker_STATE_missing.xml' }
-
-      it 'replaces status with "NULL"' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm with STATE with value out of range' do
-      before :example do
-        data['status'] = 'NULL'
-      end
-
-      let(:filename) { 'one_worker_STATE_out_of_range.xml' }
-
-      it 'replaces status with "NULL"' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm without HISTORY_RECORDS' do
-      let(:filename) { 'one_worker_HISTORY_RECORDS_missing.xml' }
-
-      it 'returns nil' do
-        expect(subject.process_vm(vm, user_map, image_map)).to be_nil
-      end
-    end
-
-    context 'vm one HISTORY record' do
-      let(:filename) { 'one_worker_HISTORY_one.xml' }
-
-      it 'returns correct vm data' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm many HISTORY records' do
-      before :example do
-        data['duration'] = '831'
-        data['suspend'] = '279'
-      end
-
-      let(:filename) { 'one_worker_HISTORY_many.xml' }
-
-      it 'returns correct vm data' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm without TEMPLATE' do
-      before :example do
-        data['cpu_count'] = '1'
-        data['image_name'] = 'NULL'
-        data['memory'] = '0'
-      end
-
-      let(:filename) { 'one_worker_TEMPLATE_missing.xml' }
-
-      it 'replaces items in TEMPLATE section with "NULL"' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm without VCPU' do
-      before :example do
-        data['cpu_count'] = '1'
-      end
-
-      let(:filename) { 'one_worker_VCPU_missing.xml' }
-
-      it 'replaces cpu count with value 1' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm with VCPU that is 0' do
-      before :example do
-        data['cpu_count'] = '1'
-      end
-
-      let(:filename) { 'one_worker_VCPU_0.xml' }
-
-      it 'replaces cpu count with value 1' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm with VCPU that is not a number' do
-      before :example do
-        data['cpu_count'] = '1'
-      end
-
-      let(:filename) { 'one_worker_VCPU_nan.xml' }
-
-      it 'replaces cpu count with value 1' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm without NET_TX' do
-      before :example do
-        data['network_inbound'] = 0
-      end
-
-      let(:filename) { 'one_worker_NET_TX_missing.xml' }
-
-      it 'replaces network outbound with value 0' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm with NET_TX that is 0' do
-      before :example do
-        data['network_inbound'] = 0
-      end
-
-      let(:filename) { 'one_worker_NET_TX_0.xml' }
-
-      it 'replaces network outbound with value 0' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm with NET_TX that is not a number' do
-      before :example do
-        data['network_inbound'] = 0
-      end
-
-      let(:filename) { 'one_worker_NET_TX_nan.xml' }
-
-      it 'replaces network outbound with value 0' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm without NET_RX' do
-      before :example do
-        data['network_outbound'] = 0
-      end
-
-      let(:filename) { 'one_worker_NET_RX_missing.xml' }
-
-      it 'replaces network outbound with value 0' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm with NET_RX that is 0' do
-      before :example do
-        data['network_outbound'] = 0
-      end
-
-      let(:filename) { 'one_worker_NET_RX_0.xml' }
-
-      it 'replaces network outbound with value 0' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm with NET_RX that is not a number' do
-      before :example do
-        data['network_outbound'] = 0
-      end
-
-      let(:filename) { 'one_worker_NET_RX_nan.xml' }
-
-      it 'replaces network outbound with value 0' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm without MEMORY' do
-      before :example do
-        data['memory'] = '0'
-      end
-
-      let(:filename) { 'one_worker_MEMORY_missing.xml' }
-
-      it 'replaces memory with value 0' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm with MEMORY that is 0' do
-      before :example do
-        data['memory'] = '0'
-      end
-
-      let(:filename) { 'one_worker_MEMORY_0.xml' }
-
-      it 'replaces memory with value 0' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm with MEMORY that is not a number' do
-      before :example do
-        data['memory'] = '0'
-      end
-
-      let(:filename) { 'one_worker_MEMORY_nan.xml' }
-
-      it 'replaces memory with value 0' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm without DISK' do
-      before :example do
-        data['image_name'] = 'NULL'
-      end
-
-      let(:filename) { 'one_worker_DISK_missing.xml' }
-
-      it 'replaces image name with "NULL"' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm with TEMPLATE/DISK/VMCATCHER_EVENT_AD_MPURI' do
-      let(:filename) { 'one_worker_vm7.xml'}
-      let(:image_name) { 'https://appdb.egi.eu/store/vo/image/662b0e71-3e21-5f43-b6a1-cc2f51319fa7:156/' }
-
-      it 'uses TEMPLATE/DISK/VMCATCHER_EVENT_AD_MPURI for image id mapping' do
-        expect(subject.process_vm(vm, user_map, image_map)['image_name']).to eq(image_name)
-      end
-    end
-
-    context 'vm without IMAGE_ID' do
-      before :example do
-        data['image_name'] = 'NULL'
-      end
-
-      let(:filename) { 'one_worker_IMAGE_ID_missing.xml' }
-
-      it 'replaces image name with "NULL"' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm without IMAGE_ID mapping' do
-      before :example do
-        data['image_name'] = '31'
-      end
-
-      let(:image_map) { { 'non_existing_id' => 'name' } }
-      let(:filename) { 'one_worker_valid_machine.xml' }
-
-      it 'replaces image name with IMAGE_ID' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
-      end
-    end
-
-    context 'vm with USER_TEMPLATE/OCCI_COMPUTE_MIXINS' do
-      let(:filename) { 'one_worker_vm4.xml' }
-      let(:image_name) { 'http://occi.localhost/occi/infrastructure/os_tpl#uuid_monitoring_20' }
-
-      it 'w/o map info uses os_tpl mixin' do
-        expect(subject.process_vm(vm, user_map, {})['image_name']).to eq(image_name)
-      end
-
-      it 'w/ map info uses map info' do
-        expect(subject.process_vm(vm, user_map, image_map)['image_name']).to eq(data['image_name'])
-      end
-    end
-
-    context 'vm with USER_TEMPLATE/OCCI_MIXIN' do
-      let(:filename) { 'one_worker_vm5.xml' }
-      let(:image_name) { 'https://occi.localhost/occi/infrastructure/os_tpl#omr_worker_x86_64_ide_1_0' }
-
-      it 'w/o map info uses os_tpl mixin' do
-        expect(subject.process_vm(vm, user_map, {})['image_name']).to eq(image_name)
-      end
-
-      it 'w/ map info uses map info' do
-        expect(subject.process_vm(vm, user_map, image_map)['image_name']).to eq(data['image_name'])
-      end
-    end
-
-    context 'vm with USER_TEMPLATE/USER_X509_DN' do
-      let(:filename) { 'one_worker_vm6.xml' }
-      let(:user_name) { '/MY=STuPID/CN=DN/CN=HERE' }
-
-      it 'w/o map info uses USER_X509_DN' do
-        expect(subject.process_vm(vm, user_map, {})['user_name']).to eq(user_name)
-      end
-
-      it 'w/ map info uses USER_X509_DN' do
-        expect(subject.process_vm(vm, user_map, image_map)['user_name']).to eq(user_name)
-      end
-    end
-
-    context 'vm with DISK SIZEs' do
-      before :example do
-        data['disk_size'] = 53
-      end
-
-      let(:filename) { 'one_worker_vm9.xml' }
-
-      it 'correctly sums disk sizes' do
+      it 'returns correct vm data with image name as image id' do
         expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
       end
     end
   end
 
-  describe '.sum_disk_size' do
+  describe 'history_records' do
     let(:vm) do
       xml = File.read("#{GEM_DIR}/mock/#{filename}")
       OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))
     end
 
-    context 'vm with DISK without SIZE' do
-      let(:filename) { 'one_worker_valid_machine.xml' }
+    let(:history) do
+      history = []
+      rec = {}
+      rec['start_time'] = '1383741169'
+      rec['end_time'] = '1383741259'
+      rec['rstart_time'] = '0'
+      rec['rend_time'] = '0'
+      rec['seq'] = '0'
+      rec['hostname'] = 'supermachine1.somewhere.com'
+      history << rec
+      rec = {}
+      rec['start_time'] = '1383741589'
+      rec['end_time'] = '1383742270'
+      rec['rstart_time'] = '1383741674'
+      rec['rend_time'] = '1383742270'
+      rec['seq'] = '1'
+      rec['hostname'] = 'supermachine2.somewhere.com'
+      history << rec
 
-      it 'returns NULL' do
-        expect(subject.sum_disk_size(vm)).to eq('NULL')
+      history
+    end
+
+    context 'with correct history records in vm' do
+      let(:filename) { 'one_worker_vm_dn01.xml' }
+
+      it 'returns history records for vm' do
+        expect(subject.history_records(vm)).to eq(history)
       end
     end
 
-    context 'vm with DISK with invalid SIZE' do
-      let(:filename) { 'one_worker_DISK_SIZE_nan.xml' }
+    context 'with no history records' do
+      let(:filename) { 'one_worker_vm_empty_history_records.xml' }
 
-      it 'returns NULL' do
-        expect(subject.sum_disk_size(vm)).to eq('NULL')
-      end
-    end
-
-    context 'vm with single DISK and valid SIZE' do
-      let(:filename) { 'one_worker_vm7.xml' }
-
-      it 'return correct disk size' do
-        expect(subject.sum_disk_size(vm)).to eq(11)
-      end
-    end
-
-    context 'vm with multiple DISKs and valid SIZE' do
-      let(:filename) { 'one_worker_vm8.xml' }
-
-      it 'return correct disk size' do
-        expect(subject.sum_disk_size(vm)).to eq(53)
+      it 'returns emtpy array' do
+        expect(subject.history_records(vm)).to be_empty
       end
     end
   end
 
-  describe '.sum_rstime' do
+  describe 'disk_records' do
     let(:vm) do
       xml = File.read("#{GEM_DIR}/mock/#{filename}")
       OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))
     end
 
-    context 'vm without RSTIME' do
-      let(:filename) { 'one_worker_RSTIME_missing.xml' }
+    let(:disks) do
+      disks = []
+      disk = {}
+      disk['size'] = '10240'
+      disks << disk
+      disk = {}
+      disk['size'] = '42368'
+      disks << disk
 
-      it 'returns 0' do
-        expect(subject.sum_rstime(vm)).to eq(0)
+      disks
+    end
+
+    context 'with correct disk records in vm' do
+      let(:filename) { 'one_worker_vm_dn01.xml' }
+
+      it 'returns history records for vm' do
+        expect(subject.disk_records(vm)).to eq(disks)
       end
     end
 
-    context 'vm with RSTIME that is 0' do
-      let(:filename) { 'one_worker_RSTIME_0.xml' }
+    context 'with no disk records' do
+      let(:filename) { 'one_worker_vm_empty_disk_records.xml' }
 
-      it 'returns 0' do
-        expect(subject.sum_rstime(vm)).to eq(0)
-      end
-    end
-
-    context 'vm without RETIME' do
-      let(:filename) { 'one_worker_RETIME_missing.xml' }
-
-      it 'returns 0' do
-        expect(subject.sum_rstime(vm)).to eq(0)
-      end
-    end
-
-    context 'vm with RETIME that is 0' do
-      before :example do
-        allow(Time).to receive(:now) { 1383741716 }
-      end
-
-      let(:filename) { 'one_worker_RETIME_0.xml' }
-
-      it 'returns difference between current time and start of the virtual machine' do
-        expect(subject.sum_rstime(vm)).to eq(42)
-      end
-    end
-
-    context 'vm with RSTIME bigger than RETIME' do
-      let(:filename) { 'one_worker_RSTIME_>_RETIME.xml' }
-
-      it 'returns nil' do
-        expect(subject.sum_rstime(vm)).to be_nil
+      it 'returns emtpy array' do
+        expect(subject.disk_records(vm)).to be_empty
       end
     end
   end
 
   describe '.perform' do
     before :example do
+      Settings.output['output_type'] = 'unknown'
       allow(OneDataAccessor).to receive(:new) { oda }
-      allow(subject).to receive(:create_user_map) { user_map }
-      allow(subject).to receive(:create_image_map) { image_map }
+      allow(subject).to receive(:create_user_map) { 'user_map' }
+      allow(subject).to receive(:create_image_map) { 'image_map' }
       allow(subject).to receive(:load_vm).and_return(:default)
-      allow(subject).to receive(:load_vm).with('10', oda).and_return(vm1)
-      allow(subject).to receive(:load_vm).with('20', oda).and_return(vm2)
-      allow(subject).to receive(:load_vm).with('30', oda).and_return(vm3)
+      allow(subject).to receive(:load_vm).with('10', oda).and_return('10')
+      allow(subject).to receive(:load_vm).with('20', oda).and_return('20')
+      allow(subject).to receive(:load_vm).with('30', oda).and_return('30')
+      allow(subject).to receive(:process_vm).with('10', anything, anything).and_return('data_vm1')
+      allow(subject).to receive(:process_vm).with('20', anything, anything).and_return('data_vm2')
+      allow(subject).to receive(:process_vm).with('30', anything, anything).and_return('data_vm3')
     end
 
     let(:vms) { '10|20|30' }
-    let(:user_map) { { '120' => 'user_name' } }
-    let(:image_map) { { '31' => 'image_name' } }
-    let(:vm1) do
-      xml = File.read("#{GEM_DIR}/mock/one_worker_vm1.xml")
-      OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))
-    end
-    let(:vm2) do
-      xml = File.read("#{GEM_DIR}/mock/one_worker_vm2.xml")
-      OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))
-    end
-    let(:vm3) do
-      xml = File.read("#{GEM_DIR}/mock/one_worker_vm3.xml")
-      OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))
-    end
-
-    let(:data) do
-      data = {}
-      data['endpoint'] = 'machine.hogwarts.co.uk'
-      data['site_name'] = 'Hogwarts'
-      data['cloud_type'] = 'OpenNebula'
-      data['vm_uuid'] = '36551'
-      data['start_time'] = Time.at(1383741160)
-      data['end_time'] = Time.at(1383742270)
-      data['machine_name'] = 'one-36551'
-      data['user_id'] = '120'
-      data['group_id'] = '0'
-      data['user_name'] = 'user_name'
-      data['fqan'] = 'gname'
-      data['status'] = 'completed'
-      data['duration'] = '596'
-      data['suspend'] = '514'
-      data['cpu_count'] = '1'
-      data['network_inbound'] = 0
-      data['network_outbound'] = 0
-      data['memory'] = '1736960'
-      data['image_name'] = 'image_name'
-      data['disk_size'] = 'NULL'
-
-      data
-    end
-
-    let(:vm1_data) { data }
-    let(:vm2_data) do
-      vm2_data = data.clone
-      vm2_data['vm_uuid'] = '36552'
-
-      vm2_data
-    end
-    let(:vm3_data) do
-      vm3_data = data.clone
-      vm3_data['vm_uuid'] = '36553'
-
-      vm3_data
-    end
+    let(:file_number) { 42 }
 
     context 'with valid vms' do
       it 'writes vm data' do
-        expect(subject).to receive(:write_data).with([vm1_data, vm2_data, vm3_data], anything)
-        subject.perform(vms, 'output_dir')
+        expect(subject).to receive(:write_data).with(['data_vm1', 'data_vm2', 'data_vm3'], file_number)
+        subject.perform(vms, file_number)
       end
     end
 
-    context 'with one vm not loaded correclty' do
+    context 'with one vm not loaded correctly' do
       before :example do
         allow(subject).to receive(:load_vm).with('20', oda).and_return(nil)
       end
 
       it 'writes data of the correct vms' do
-        expect(subject).to receive(:write_data).with([vm1_data, vm3_data], anything)
-        subject.perform(vms, 'output_dir')
+        expect(subject).to receive(:write_data).with(['data_vm1', 'data_vm3'], file_number)
+        subject.perform(vms, file_number)
       end
     end
 
-    context 'with one vm that has malformed data' do
-      let(:vm2) do
-        xml = File.read("#{GEM_DIR}/mock/one_worker_malformed_vm.xml")
-        OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))
+    context 'with apel data validator' do
+      before :example do
+        Settings.output['output_type'] = 'apel-0.2'
       end
 
-      it 'writes data of the correct vms' do
-        expect(subject).to receive(:write_data).with([vm1_data, vm3_data], anything)
-        subject.perform(vms, 'output_dir')
+      let(:validator) { double('validator') }
+
+      context 'and all vm valid' do
+        it 'uses apel data validator to validate all vms and all passes' do
+          expect(DataValidators::ApelDataValidator).to receive(:new).and_return(validator).exactly(3).times
+          expect(validator).to receive(:validate_data).with('data_vm1').and_return('valid_data_vm1')
+          expect(validator).to receive(:validate_data).with('data_vm2').and_return('valid_data_vm2')
+          expect(validator).to receive(:validate_data).with('data_vm3').and_return('valid_data_vm3')
+          expect(subject).to receive(:write_data).with(['valid_data_vm1', 'valid_data_vm2', 'valid_data_vm3'], file_number)
+          subject.perform(vms, file_number)
+        end
+      end
+
+      context 'and all vm valid but one' do
+        it 'uses apel data validator to validate all vms and all but one passes' do
+          expect(DataValidators::ApelDataValidator).to receive(:new).and_return(validator).exactly(3).times
+          expect(validator).to receive(:validate_data).with('data_vm1').and_return('valid_data_vm1')
+          expect(validator).to receive(:validate_data).with('data_vm2').and_raise(Errors::ValidationError)
+          expect(validator).to receive(:validate_data).with('data_vm3').and_return('valid_data_vm3')
+          expect(subject).to receive(:write_data).with(['valid_data_vm1', 'valid_data_vm3'], file_number)
+          subject.perform(vms, file_number)
+        end
+      end
+    end
+
+    context 'with apel data validator' do
+      before :example do
+        Settings.output['output_type'] = 'pbs-0.1'
+      end
+
+      let(:validator) { double('validator') }
+
+      context 'and all vm valid' do
+        it 'uses apel data validator to validate all vms and all passes' do
+          expect(DataValidators::PbsDataValidator).to receive(:new).and_return(validator).exactly(3).times
+          expect(validator).to receive(:validate_data).with('data_vm1').and_return('valid_data_vm1')
+          expect(validator).to receive(:validate_data).with('data_vm2').and_return('valid_data_vm2')
+          expect(validator).to receive(:validate_data).with('data_vm3').and_return('valid_data_vm3')
+          expect(subject).to receive(:write_data).with(['valid_data_vm1', 'valid_data_vm2', 'valid_data_vm3'], file_number)
+          subject.perform(vms, file_number)
+        end
+      end
+
+      context 'and all vm valid but one' do
+        it 'uses apel data validator to validate all vms and all but one passes' do
+          expect(DataValidators::PbsDataValidator).to receive(:new).and_return(validator).exactly(3).times
+          expect(validator).to receive(:validate_data).with('data_vm1').and_return('valid_data_vm1')
+          expect(validator).to receive(:validate_data).with('data_vm2').and_raise(Errors::ValidationError)
+          expect(validator).to receive(:validate_data).with('data_vm3').and_return('valid_data_vm3')
+          expect(subject).to receive(:write_data).with(['valid_data_vm1', 'valid_data_vm3'], file_number)
+          subject.perform(vms, file_number)
+        end
       end
     end
   end

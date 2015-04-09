@@ -119,24 +119,7 @@ describe OneacctExporter do
       end
     end
 
-    context 'with not related files' do
-      before :example do
-        FileUtils.touch("#{testdir_path}/aa")
-        FileUtils.touch("#{testdir_path}/11")
-        FileUtils.touch("#{testdir_path}/aa11")
-        FileUtils.touch("#{testdir_path}/11aa")
-        FileUtils.touch("#{testdir_path}/0")
-        FileUtils.touch("#{testdir_path}/01")
-        FileUtils.touch("#{testdir_path}/0000000000001")
-      end
-
-      it 'keeps non-related files in the directory' do
-        subject.clean_output_dir
-        expect(Dir.entries(testdir_path).count).to eq(9)
-      end
-    end
-
-    context 'with related files' do
+    context 'with files in output directory' do
       before :example do
         FileUtils.touch("#{testdir_path}/00000000000001")
         FileUtils.touch("#{testdir_path}/00000000000002")
@@ -149,29 +132,6 @@ describe OneacctExporter do
       it 'removes all files and leaves directory empty' do
         subject.clean_output_dir
         expect(Dir.entries(testdir_path).count).to eq(2)
-      end
-    end
-
-    context 'with both related and on-related files' do
-      before :example do
-        FileUtils.touch("#{testdir_path}/00000000000001")
-        FileUtils.touch("#{testdir_path}/00000000000002")
-        FileUtils.touch("#{testdir_path}/00000000000003")
-        FileUtils.touch("#{testdir_path}/00000000000004")
-        FileUtils.touch("#{testdir_path}/00000000000005")
-        FileUtils.touch("#{testdir_path}/00000000000006")
-        FileUtils.touch("#{testdir_path}/aa")
-        FileUtils.touch("#{testdir_path}/11")
-        FileUtils.touch("#{testdir_path}/aa11")
-        FileUtils.touch("#{testdir_path}/11aa")
-        FileUtils.touch("#{testdir_path}/0")
-        FileUtils.touch("#{testdir_path}/01")
-        FileUtils.touch("#{testdir_path}/0000000000001")
-      end
-
-      it 'removes all related files and keeps all non-related files' do
-        subject.clean_output_dir
-        expect(Dir.entries(testdir_path).count).to eq(9)
       end
     end
   end

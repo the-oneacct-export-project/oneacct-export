@@ -18,7 +18,7 @@ class OneWorker
   include OutputTypes
   include Errors
 
-  sidekiq_options retry: 5, dead: false,\
+  sidekiq_options retry: 5, dead: false, \
     queue: (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'].to_sym : :default
 
   # Prepare data that are specific for output type and common for every virtual machine
@@ -62,8 +62,8 @@ class OneWorker
   rescue => e
     msg = "Couldn't create map: #{e.message}. "\
       'Stopping to avoid malformed records.'
-      logger.error(msg)
-      raise msg
+    logger.error(msg)
+    raise msg
   end
 
   # Load virtual machine with specified ID
@@ -107,6 +107,11 @@ class OneWorker
     data
   end
 
+  # Returns an array of history records from vm
+  #
+  # @param [OpenNebula::VirtualMachine] vm virtual machine
+  #
+  # @return [Array] array of hashes representing vm's history records
   def history_records(vm)
     history = []
     vm.each 'HISTORY_RECORDS/HISTORY' do |h|
@@ -124,6 +129,11 @@ class OneWorker
     history
   end
 
+  # Returns an array of disk records from vm
+  #
+  # @param [OpenNebula::VirtualMachine] vm virtual machine
+  #
+  # @return [Array] array of hashes representing vm's disk records
   def disk_records(vm)
     disks = []
     vm.each 'TEMPLATE/DISK' do |d|
@@ -195,6 +205,9 @@ class OneWorker
   end
 
   # Write processed data into output directory
+  #
+  # @param [Hash] data data to be written into file
+  # @param [Fixnum] file_number sequence number of file data will be written to
   def write_data(data, file_number)
     logger.debug('Creating writer...')
     ow = OneWriter.new(data, file_number, logger)
@@ -203,9 +216,5 @@ class OneWorker
     msg = "Cannot write result: #{e.message}"
     logger.error(msg)
     raise msg
-  end
-
-  def parse(value, regex, substitute = 'NULL')
-    regex =~ value ? value : substitute
   end
 end
