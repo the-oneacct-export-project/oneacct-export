@@ -13,7 +13,6 @@ require 'sidekiq/api'
 # @attr_reader [Integer] timeout timeout for blocking mode
 # @attr_reader [TrueClass, FalseClass] compatibility says whether to run export in compatibility mode or not 
 class OneacctExporter
-  CONVERT_FORMAT = '%014d'
 
   attr_reader :log, :range, :groups, :blocking, :timeout, :compatibility
 
@@ -39,11 +38,10 @@ class OneacctExporter
     vms = []
     #load records of virtual machines in batches
     while vms = oda.vms(batch_number, @range, @groups)
-      output_file = CONVERT_FORMAT % new_file_number
       @log.info("Starting worker with batch number: #{batch_number}.")
       unless vms.empty?
         #add a new job for every batch to the Sidekiq's queue
-        OneWorker.perform_async(vms.join('|'), "#{Settings.output['output_dir']}/#{output_file}")
+        OneWorker.perform_async(vms.join('|'), new_file_number)
         new_file_number += 1
       end
       batch_number += 1

@@ -4,12 +4,13 @@ describe OneWriter do
   subject { one_writer }
   before :example do
     Settings.output['output_type'] = 'one_writer_test_output_type'
+    Settings.output['output_dir'] = 'one_writer_test_output_dir'
   end
 
   let(:data) { { 'aaa' => 111, 'bbb' => 222 } }
   let(:testfile) { "#{GEM_DIR}/mock/one_writer_testfile" }
   let(:dev_null) { '/dev/null' }
-  let(:output) { "#{GEM_DIR}/mock/one_writer_output" }
+  let(:file_number) { 42 }
 
   describe '#new' do
     context 'with correct arguments' do
@@ -18,7 +19,7 @@ describe OneWriter do
       end
 
       let(:one_writer) do
-        OneWriter.new(data, output, dev_null)
+        OneWriter.new(data, file_number, dev_null)
       end
 
       it 'takes three parameters and returns OneWriter object' do
@@ -27,8 +28,23 @@ describe OneWriter do
 
       it 'correctly assigns three parameters' do
         expect(subject.data).to eq(data)
-        expect(subject.output).to eq(output)
+        expect(subject.output).to eq("#{Settings.output['output_dir']}/#{file_number}")
         expect(subject.log).to eq(dev_null)
+      end
+    end
+
+    context 'with apel output format' do
+      before :example do
+        Settings.output['output_type'] = 'apel-0.2'
+        allow(OneWriter).to receive(:template_filename) { testfile }
+      end
+
+      let(:one_writer) do
+        OneWriter.new(data, file_number, dev_null)
+      end
+
+      it 'uses apel specific filename format' do
+        expect(subject.output).to eq("#{Settings.output['output_dir']}/000000000000#{file_number}")
       end
     end
 
@@ -128,7 +144,7 @@ describe OneWriter do
     end
 
     let(:one_writer) do
-      OneWriter.new(data, output, Logger.new(dev_null))
+      OneWriter.new(data, file_number, Logger.new(dev_null))
     end
     let(:tmp) do
       tmp = double('tmp')
@@ -138,7 +154,7 @@ describe OneWriter do
 
     it 'writes result version of a template into output file' do
       expect(subject).to receive(:write_to_tmp).with(tmp, data)
-      expect(subject).to receive(:copy_to_output).with("#{GEM_DIR}/mock/one_writer_tmp", output)
+      expect(subject).to receive(:copy_to_output).with("#{GEM_DIR}/mock/one_writer_tmp", "#{Settings.output['output_dir']}/#{file_number}")
       expect(tmp).to receive(:close)
       subject.write
     end
