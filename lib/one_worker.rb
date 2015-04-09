@@ -172,7 +172,7 @@ class OneWorker
     rstime = 0
     vm.each 'HISTORY_RECORDS/HISTORY' do |h|
       next unless h['RSTIME'] && h['RETIME'] && h['RSTIME'] != '0'
-      if h['RETIME'] == '0'
+      if h['RETIME'] == '0' && STATES[vm['STATE'].to_i] != 'completed'
         rstime += Time.now.to_i - h['RSTIME'].to_i
         next
       end

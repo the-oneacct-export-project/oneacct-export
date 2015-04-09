@@ -680,15 +680,23 @@ describe OneWorker do
       end
     end
 
-    context 'vm with RETIME that is 0' do
+    context 'vm with RETIME that is 0 and still running' do
       before :example do
-        allow(Time).to receive(:now) { 1383741716 }
+        allow(Time).to receive(:now) { Time.at(1383741716) }
       end
 
-      let(:filename) { 'one_worker_RETIME_0.xml' }
+      let(:filename) { 'one_worker_RETIME_0_RUNNING.xml' }
 
       it 'returns difference between current time and start of the virtual machine' do
         expect(subject.sum_rstime(vm)).to eq(42)
+      end
+    end
+
+    context 'vm with RETIME that is 0 and is stopped' do
+      let(:filename) { 'one_worker_RETIME_0_STOPPED.xml' }
+
+      it 'returns nil' do
+        expect(subject.sum_rstime(vm)).to be_nil
       end
     end
 
