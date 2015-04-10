@@ -8,13 +8,13 @@ require 'settings'
 require 'fileutils'
 require 'oneacct_opts'
 
-#parse options from command line
+# parse options from command line
 options = OneacctOpts.parse(ARGV)
 
-#initialize default logger
+# initialize default logger
 log = Logger.new(STDOUT)
 
-#initialize specific logger according to the configuration
+# initialize specific logger according to the configuration
 if Settings['logging'] && Settings['logging']['log_type'] == 'file'
   begin
     log_file = File.open(Settings['logging']['log_file'], File::WRONLY | File::CREAT | File::APPEND)
@@ -38,7 +38,7 @@ groups = {}
 groups[:include] = options.include_groups if options.include_groups
 groups[:exclude] = options.exclude_groups if options.exclude_groups
 
-#read groups restriction from file if chosen
+# read groups restriction from file if chosen
 if options.groups_file
   log.debug('Reading groups from file...')
   if File.exist?(options.groups_file) && File.readable?(options.groups_file)
@@ -54,7 +54,7 @@ if options.groups_file
   end
 end
 
-#create output directory
+# create output directory
 begin
   FileUtils.mkdir_p Settings.output['output_dir']
 rescue SystemCallError => e
@@ -73,6 +73,6 @@ opts[:compatibility] = options.compatibility
 
 log.debug(opts)
 
-#run the export
+# run the export
 oneacct_exporter = OneacctExporter.new(opts, log)
 oneacct_exporter.export

@@ -48,7 +48,7 @@ module DataValidators
           return nil
         end
 
-        disk_size = disk_size + size.to_i
+        disk_size += size.to_i
       end
 
       disk_size

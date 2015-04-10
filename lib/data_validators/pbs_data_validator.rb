@@ -3,7 +3,6 @@ require 'data_validators/data_compute'
 require 'errors'
 
 module DataValidators
-
   # Data validator class for pbs output type
   class PbsDataValidator < DataValidator
     include InputValidator
@@ -39,7 +38,7 @@ module DataValidators
     # history_record['state'] - required, either all history records 'U' or last history record with 'E' if vm finished
     # history_record['seq'] - required
     # history_record['hostname'] - required
-    def validate_data(data=nil)
+    def validate_data(data = nil)
       unless data
         fail Errors::ValidationError, 'Skipping a malformed record. '\
           'No data available to validate'
@@ -47,25 +46,25 @@ module DataValidators
 
       valid_data = data.clone
 
-      fail_validation 'host' unless is_string?(data['host'])
-      fail_validation 'queue' unless is_string?(data['pbs_queue'])
-      fail_validation 'owner' unless is_string?(data['realm'])
-      fail_validation 'VMUUID' unless is_string?(data['vm_uuid'])
-      fail_validation 'owner' unless is_string?(data['user_name'])
-      fail_validation 'group' unless is_string?(data['group_name'])
-      fail_validation 'ppn' unless is_number?(data['cpu_count'])
-      fail_validation 'mem' unless is_number?(data['memory'])
+      fail_validation 'host' unless string?(data['host'])
+      fail_validation 'queue' unless string?(data['pbs_queue'])
+      fail_validation 'owner' unless string?(data['realm'])
+      fail_validation 'VMUUID' unless string?(data['vm_uuid'])
+      fail_validation 'owner' unless string?(data['user_name'])
+      fail_validation 'group' unless string?(data['group_name'])
+      fail_validation 'ppn' unless number?(data['cpu_count'])
+      fail_validation 'mem' unless number?(data['memory'])
       fail_validation 'HISTORY_RECORDS' if (!data['history']) || data['history'].empty?
 
       history = []
       data['history'].each do |h|
         history_record = h.clone
-        fail_validation 'start' unless is_non_zero_number?(h['start_time'])
+        fail_validation 'start' unless non_zero_number?(h['start_time'])
         history_record['start_time'] = Time.at(h['start_time'].to_i)
-        fail_validation 'end' unless is_number?(h['end_time'])
+        fail_validation 'end' unless number?(h['end_time'])
         history_record['end_time'] = Time.at(h['end_time'].to_i)
-        fail_validation 'seq' unless is_number?(h['seq'])
-        fail_validation 'hostname' unless is_string?(h['hostname'])
+        fail_validation 'seq' unless number?(h['seq'])
+        fail_validation 'hostname' unless string?(h['hostname'])
 
         history_record['state'] = 'U'
         history << history_record

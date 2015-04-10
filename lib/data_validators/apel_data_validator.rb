@@ -4,7 +4,6 @@ require 'data_validators/data_validator_helper'
 require 'errors'
 
 module DataValidators
-
   # Data validator class for apel output type
   class ApelDataValidator < DataValidator
     include InputValidator
@@ -44,7 +43,7 @@ module DataValidators
     # valid_data['memory'] - defaults to 0
     # valid_data['image_name'] - defaults to NULL
     # valid_data['disk_size']  -defaults to NULL
-    def validate_data(data=nil)
+    def validate_data(data = nil)
       unless data
         fail Errors::ValidationError, 'Skipping a malformed record. '\
           'No data available to validate'
@@ -52,15 +51,15 @@ module DataValidators
 
       valid_data = data.clone
 
-      fail_validation 'Endpoint' unless is_string?(data['endpoint'])
-      fail_validation 'SiteName' unless is_string?(data['site_name'])
-      fail_validation 'CloudType' unless is_string?(data['cloud_type'])
-      fail_validation 'VMUUID' unless is_string?(data['vm_uuid'])
+      fail_validation 'Endpoint' unless string?(data['endpoint'])
+      fail_validation 'SiteName' unless string?(data['site_name'])
+      fail_validation 'CloudType' unless string?(data['cloud_type'])
+      fail_validation 'VMUUID' unless string?(data['vm_uuid'])
 
-      fail_validation 'StartTime' unless is_non_zero_number?(data['start_time'])
+      fail_validation 'StartTime' unless non_zero_number?(data['start_time'])
       start_time = data['start_time'].to_i
       valid_data['start_time'] = Time.at(start_time)
-      fail_validation 'EndTime' unless is_number?(data['end_time'])
+      fail_validation 'EndTime' unless number?(data['end_time'])
       end_time = data['end_time'].to_i
       valid_data['end_time'] = end_time == 0 ? 'NULL' : Time.at(end_time)
       fail_validation 'EndTime' if end_time != 0 && valid_data['start_time'] > valid_data['end_time']

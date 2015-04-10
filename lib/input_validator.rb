@@ -11,19 +11,19 @@ module InputValidator
     object.to_s =~ regexp
   end
 
-  def is_number?(object)
+  def number?(object)
     is?(object, NUMBER_RE)
   end
 
-  def is_uri?(object)
+  def uri?(object)
     is?(object, URI_RE)
   end
 
-  def is_string?(object)
+  def string?(object)
     is?(object, STRING_RE)
   end
 
-  def is_non_zero_number?(object)
+  def non_zero_number?(object)
     is?(object, NON_ZERO_NUMBER_RE)
   end
 end

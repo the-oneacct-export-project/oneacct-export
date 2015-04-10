@@ -19,7 +19,7 @@ class OneWorker
   include Errors
 
   sidekiq_options retry: 5, dead: false, \
-    queue: (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'].to_sym : :default
+                  queue: (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'].to_sym : :default
 
   # Prepare data that are specific for output type and common for every virtual machine
   def output_type_specific_data
@@ -76,7 +76,7 @@ class OneWorker
     return nil
   end
 
-  # Obtain and parse required data from vm 
+  # Obtain and parse required data from vm
   #
   # @return [Hash] required data from virtual machine
   def process_vm(vm, user_map, image_map)
@@ -167,7 +167,8 @@ class OneWorker
 
   # Sidekiq specific method, specifies the purpose of the worker
   #
-  # @param [String] vms IDs of virtual machines to process in form of numbers separated by '|' (easier for cooperation with redis)
+  # @param [String] vms IDs of virtual machines to process in form of numbers separated by '|'
+  # (easier for cooperation with redis)
   # @param [String] file_number number of the output file
   def perform(vms, file_number)
     OneacctExporter::Log.setup_log_level(logger)

@@ -86,9 +86,7 @@ class OneacctOpts
   # Set default values for not specified options
   def self.set_defaults(options)
     options.blocking = BLOCKING_DEFAULT unless options.blocking
-    unless options.timeout
-      options.timeout = TIMEOUT_DEFAULT if options.blocking
-    end
+    options.timeout = TIMEOUT_DEFAULT if options.blocking unless options.timeout
     options.compatibility = COMPATIBILITY_DEFAULT unless options.compatibility
   end
 
@@ -99,24 +97,24 @@ class OneacctOpts
 
   # Make sure command line parameters are sane
   def self.check_options_restrictions(options)
-    #make sure date range make sense
+    # make sure date range make sense
     if options.records_from && options.records_to && options.records_from >= options.records_to
       fail ArgumentError, 'Wrong time range for records retrieval.'
     end
 
-    #make sure only one group restriction is used
+    # make sure only one group restriction is used
     if options.include_groups && options.exclude_groups
       fail ArgumentError, 'Mixing of group options is not possible.'
     end
 
-    #make sure group file option is not used without specifying group restriction type
+    # make sure group file option is not used without specifying group restriction type
     unless options.include_groups || options.exclude_groups
       if options.groups_file
         fail ArgumentError, 'Cannot use group file without specifying group restriction type.'
       end
     end
 
-    #make sure that timeout option is not used without blocking option
+    # make sure that timeout option is not used without blocking option
     if options.timeout && !options.blocking
       fail ArgumentError, 'Cannot set timeout without a blocking mode.'
     end
@@ -124,32 +122,32 @@ class OneacctOpts
 
   # Make sure configuration is sane
   def self.check_settings_restrictions
-    #make sure all mandatory parameters are set
+    # make sure all mandatory parameters are set
     unless Settings['output'] && Settings.output['output_dir'] && Settings.output['output_type']
       fail ArgumentError, 'Missing some mandatory parameters. Check your configuration file.'
     end
 
-    #make sure log file is specified while loggin to file
+    # make sure log file is specified while loggin to file
     if Settings['logging'] && Settings.logging['log_type'] == 'file' &&
-        !Settings.logging['log_file']
+       !Settings.logging['log_file']
       fail ArgumentError, 'Missing file for logging. Check your configuration file.'
     end
 
     if Settings.output['output_type'] == APEL_OT
       unless Settings.output['apel'] && Settings.output.apel['site_name'] &&
-          Settings.output.apel['cloud_type'] && Settings.output.apel['endpoint']
+             Settings.output.apel['cloud_type'] && Settings.output.apel['endpoint']
         fail ArgumentError, 'Missing some mandatory parameters. Check your configuration file.'
       end
     end
 
-    if Settings.output['output_type'] == PBS_OT && Settings.output['pbs'] 
+    if Settings.output['output_type'] == PBS_OT && Settings.output['pbs']
       unless Settings.output.pbs['realm'] && Settings.output.pbs['queue'] &&
-          Settings.output.pbs['scratch_type'] && Settings.output.pbs['host_identifier']
+             Settings.output.pbs['scratch_type'] && Settings.output.pbs['host_identifier']
         fail ArgumentError, 'Missing some mandatory parameters. Check your configuration file.'
       end
     end
 
-    #make sure specified template really exists
+    # make sure specified template really exists
     template_filename = OneWriter.template_filename(Settings.output['output_type'])
     unless File.exist?(template_filename)
       fail ArgumentError, "Non-existing template #{Settings.output['output_type']}."
