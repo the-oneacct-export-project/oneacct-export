@@ -22,7 +22,7 @@ module DataValidators
       @log = log
     end
 
-    # All possible output feilds and their default values:
+    # All possible output fields and their default values:
     #
     # valid_data['endpoint'] - required
     # valid_data['site_name'] - required
@@ -73,7 +73,11 @@ module DataValidators
       valid_data['group_name'] = default(data['group_name'], :string, nil)
 
       status = default(data['status'], :number, nil)
-      valid_data['status'] = status ? STATES[status.to_i] : 'NULL'
+      if status
+        status = status.to_i
+        fail_validation 'Status' unless status.to_s == data['status'] && status < STATES.size && status >= 0
+      end
+      valid_data['status'] = status ? STATES[status] : 'NULL'
 
       fail_validation 'HISTORY_RECORDS' if (!data['history']) || data['history'].empty?
 

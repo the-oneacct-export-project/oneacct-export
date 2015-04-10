@@ -9,7 +9,10 @@ module DataValidators
     #
     # @return [Integer] sum of time when virtual machine was actually running
     def sum_rstime(history_records, completed, vm_id)
+      return nil unless history_records
+
       rstime = 0
+
       history_records.each do |record|
         next unless default(record['rstart_time'], :nzn, nil) && default(record['rend_time'], :number, nil)
         rstart_time = record['rstart_time'].to_i
@@ -34,7 +37,10 @@ module DataValidators
     #
     # @return [Integer] sum of disk sizes in GB rounded up
     def sum_disk_size(disks, vm_id)
+      return nil unless disks
+
       disk_size = 0
+
       disks.each do |disk|
         size = default(disk['size'], :number, nil)
         unless size

@@ -35,6 +35,12 @@ module DataValidators
       let(:vm_id) { 42 }
 
       context 'vm without disks' do
+        it 'returns nil' do
+          expect(subject.sum_disk_size(nil, vm_id)).to be_nil
+        end
+      end
+
+      context 'vm empty disks' do
         it 'returns 0' do
           expect(subject.sum_disk_size([], vm_id)).to eq(0)
         end
@@ -101,6 +107,12 @@ module DataValidators
       let(:completed) { true }
 
       context 'vm without history records' do
+        it 'returns nil' do
+          expect(subject.sum_rstime(nil, completed, vm_id)).to be_nil
+        end
+      end
+
+      context 'vm with empty history records' do
         it 'returns 0' do
           expect(subject.sum_rstime([], completed, vm_id)).to eq(0)
         end

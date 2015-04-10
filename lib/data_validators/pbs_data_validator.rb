@@ -19,7 +19,7 @@ module DataValidators
       @log = log
     end
 
-    # All possible output feilds and their default values:
+    # All possible output fields and their default values:
     #
     # valid_data['host'] - required
     # valid_data['pbs_queue'] - required
