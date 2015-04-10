@@ -1,12 +1,18 @@
 ---
 defaults: &defaults
-  site_name: Undefined # Usually a short provider name, e.g. CESNET
-  cloud_type: OpenNebula # CMF type, only OpenNebula is supported
-  endpoint: https://occi.localhost.com:11443/ # URL of your OCCI endpoint, e.g. https://fqdn.example.com:11443/
   output:
     output_dir: /var/spool/apel/outgoing/00000000 # Directory for outgoing messages
     output_type: apel-0.2 # Format of outgoing messages. apel-0.2 is currently the only option
     num_of_vms_per_file: 500 # Maximum number of virtual machine records per one output file
+    apel: #Options for apel output format
+      site_name: Undefined # Usually a short provider name, e.g. CESNET
+      cloud_type: OpenNebula # CMF type, only OpenNebula is supported
+      endpoint: https://occi.localhost.com:11443/ # URL of your OCCI endpoint, e.g. https://fqdn.example.com:11443/
+    pbs: # Options for pbs output format
+      realm: REALM # Owner's realm, e.g. META
+      queue: cloud # Queue name
+      scratch_type: local #data store type
+      host_identifier: on_localhost #identifier for host opennebula is running on
   logging:
     log_type: file # Two options: file, syslog. Defaults to stdout
     log_file: /var/log/oneacct-export/oneacct-export.log # Used when type file selected
@@ -33,13 +39,19 @@ development:
 
 
 test:
-  site_name: <placeholder>
-  cloud_type: <placeholder>
-  endpoint: <placeholder>
   output:
     output_dir: <placeholder>
     output_type: <placeholder>
     num_of_vms_per_file: <placeholder>
+    apel:
+      site_name: <placeholder>
+      cloud_type: <placeholder>
+      endpoint: <placeholder>
+    pbs:
+      realm: <placeholder>
+      queue: <placeholder>
+      scratch_type: <placeholder>
+      host_identifier: <placeholder>
   logging:
     log_type: <placeholder>
     log_file: <placeholder>

@@ -7,29 +7,37 @@ require 'one_writer'
 require 'sidekiq_conf'
 require 'oneacct_exporter/log'
 require 'settings'
+require 'data_validators/apel_data_validator'
+require 'data_validators/pbs_data_validator'
+require 'output_types'
+require 'errors'
 
 # Sidekiq worker class
 class OneWorker
   include Sidekiq::Worker
+  include OutputTypes
+  include Errors
 
-  sidekiq_options retry: 5, dead: false,\
-    queue: (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'].to_sym : :default
+  sidekiq_options retry: 5, dead: false, \
+                  queue: (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'].to_sym : :default
 
-  B_IN_GB = 1_073_741_824
+  # Prepare data that are specific for output type and common for every virtual machine
+  def output_type_specific_data
+    data = {}
+    if Settings.output['output_type'] == PBS_OT && Settings.output['pbs']
+      data['realm'] = Settings.output.pbs['realm'] ||= 'META'
+      data['pbs_queue'] = Settings.output.pbs['queue'] ||= 'cloud'
+      data['scratch_type'] = Settings.output.pbs['scratch_type'] ||= 'local'
+      data['host'] = Settings.output.pbs['host_identifier'] ||= 'on_localhost'
+    end
 
-  STRING = /[[:print:]]+/
-  NUMBER = /[[:digit:]]+/
-  NON_ZERO = /[1-9][[:digit:]]*/
-  STATES = %w(started started suspended started suspended suspended completed completed suspended)
+    if Settings.output['output_type'] == APEL_OT
+      data['endpoint'] = Settings.output.apel['endpoint'].chomp('/')
+      data['site_name'] = Settings.output.apel['site_name']
+      data['cloud_type'] = Settings.output.apel['cloud_type']
+    end
 
-  # Prepare data that are common for every virtual machine
-  def common_data
-    common_data = {}
-    common_data['endpoint'] = Settings['endpoint'].chomp('/')
-    common_data['site_name'] = Settings['site_name']
-    common_data['cloud_type'] = Settings['cloud_type']
-
-    common_data
+    data
   end
 
   # Create mapping of user ID and specified element
@@ -53,7 +61,7 @@ class OneWorker
     oda.mapping(pool_type, mapping)
   rescue => e
     msg = "Couldn't create map: #{e.message}. "\
-          'Stopping to avoid malformed records.'
+      'Stopping to avoid malformed records.'
     logger.error(msg)
     raise msg
   end
@@ -68,80 +76,74 @@ class OneWorker
     return nil
   end
 
-  # Obtain and parse required data from vm 
+  # Obtain and parse required data from vm
   #
   # @return [Hash] required data from virtual machine
   def process_vm(vm, user_map, image_map)
-    data = common_data.clone
+    data = output_type_specific_data
 
-    data['vm_uuid'] = parse(vm['ID'], STRING)
-    unless vm['STIME']
-      logger.error('Skipping a malformed record. '\
-                   "VM with id #{data['vm_uuid']} has no StartTime.")
-      return nil
-    end
-
-    data['start_time'] = Time.at(parse(vm['STIME'], NUMBER).to_i)
-    start_time = data['start_time'].to_i
-    if start_time == 0
-      logger.error('Skipping a malformed record. '\
-                   "VM with id #{data['vm_uuid']} has malformed StartTime.")
-      return nil
-    end
-    data['end_time'] = parse(vm['ETIME'], NON_ZERO)
-    end_time = data['end_time'].to_i
-    data['end_time'] = Time.at(end_time) if end_time != 0
-
-    if end_time != 0 && start_time > end_time
-      logger.error('Skipping malformed record. '\
-                   "VM with id #{data['vm_uuid']} has wrong time entries.")
-      return nil
-    end
-
-    data['machine_name'] = parse(vm['DEPLOY_ID'], STRING, "one-#{data['vm_uuid']}")
-    data['user_id'] = parse(vm['UID'], STRING)
-    data['group_id'] = parse(vm['GID'], STRING)
-    data['user_name'] = parse(vm['USER_TEMPLATE/USER_X509_DN'], STRING, nil)
-    data['user_name'] = parse(user_map[data['user_id']], STRING) unless data['user_name']
-    data['fqan'] = parse(vm['GNAME'], STRING, nil)
-
-    if vm['STATE']
-      data['status'] = parse(STATES[vm['STATE'].to_i], STRING)
-    else
-      data['status'] = 'NULL'
-    end
-
-    unless vm['HISTORY_RECORDS/HISTORY[1]']
-      logger.warn('Skipping malformed record. '\
-                  "VM with id #{data['vm_uuid']} has no history records.")
-      return nil
-    end
-
-    rstime = sum_rstime(vm)
-    return nil unless rstime
-
-    data['duration'] = parse(rstime.to_s, NON_ZERO)
-
-    suspend = (end_time - start_time) - data['duration'].to_i unless end_time == 0
-    data['suspend'] = parse(suspend.to_s, NUMBER)
-
-    data['cpu_count'] = parse(vm['TEMPLATE/VCPU'], NON_ZERO, '1')
-
-    net_tx = parse(vm['NET_TX'], NUMBER, 0)
-    data['network_inbound'] = (net_tx.to_i / B_IN_GB).round
-    net_rx = parse(vm['NET_RX'], NUMBER, 0)
-    data['network_outbound'] = (net_rx.to_i / B_IN_GB).round
-
-    data['memory'] = parse(vm['TEMPLATE/MEMORY'], NUMBER, '0')
-
-    data['image_name'] = parse(vm['TEMPLATE/DISK[1]/VMCATCHER_EVENT_AD_MPURI'], STRING, nil)
-    data['image_name'] = parse(image_map[vm['TEMPLATE/DISK[1]/IMAGE_ID']], STRING, nil) unless data['image_name']
-    data['image_name'] = parse(mixin(vm), STRING, nil) unless data['image_name']
-    data['image_name'] = parse(vm['TEMPLATE/DISK[1]/IMAGE_ID'], STRING) unless data['image_name']
-
-    data['disk_size'] = sum_disk_size(vm)
+    data['vm_uuid'] = vm['ID']
+    data['start_time'] = vm['STIME']
+    data['end_time'] = vm['ETIME']
+    data['machine_name'] = vm['DEPLOY_ID']
+    data['user_id'] = vm['UID']
+    data['group_id'] = vm['GID']
+    data['user_dn'] = vm['USER_TEMPLATE/USER_X509_DN']
+    data['user_dn'] ||= user_map[data['user_id']]
+    data['user_name'] = vm['UNAME']
+    data['group_name'] = vm['GNAME']
+    data['status'] = vm['STATE']
+    data['cpu_count'] = vm['TEMPLATE/VCPU']
+    data['network_inbound'] = vm['NET_TX']
+    data['network_outbound'] = vm['NET_RX']
+    data['memory'] = vm['TEMPLATE/MEMORY']
+    data['image_name'] = vm['TEMPLATE/DISK[1]/VMCATCHER_EVENT_AD_MPURI']
+    data['image_name'] ||= image_map[vm['TEMPLATE/DISK[1]/IMAGE_ID']]
+    data['image_name'] ||= mixin(vm)
+    data['image_name'] ||= vm['TEMPLATE/DISK[1]/IMAGE_ID']
+    data['history'] = history_records(vm)
+    data['disks'] = disk_records(vm)
 
     data
+  end
+
+  # Returns an array of history records from vm
+  #
+  # @param [OpenNebula::VirtualMachine] vm virtual machine
+  #
+  # @return [Array] array of hashes representing vm's history records
+  def history_records(vm)
+    history = []
+    vm.each 'HISTORY_RECORDS/HISTORY' do |h|
+      history_record = {}
+      history_record['start_time'] = h['STIME']
+      history_record['end_time'] = h['ETIME']
+      history_record['rstart_time'] = h['RSTIME']
+      history_record['rend_time'] = h['RETIME']
+      history_record['seq'] = h['SEQ']
+      history_record['hostname'] = h['HOSTNAME']
+
+      history << history_record
+    end
+
+    history
+  end
+
+  # Returns an array of disk records from vm
+  #
+  # @param [OpenNebula::VirtualMachine] vm virtual machine
+  #
+  # @return [Array] array of hashes representing vm's disk records
+  def disk_records(vm)
+    disks = []
+    vm.each 'TEMPLATE/DISK' do |d|
+      disk = {}
+      disk['size'] = d['SIZE']
+
+      disks << disk
+    end
+
+    disks
   end
 
   # Look for 'os_tpl' OCCI mixin to better identifie virtual machine's image
@@ -163,56 +165,10 @@ class OneWorker
     nil # nothing found
   end
 
-  # Sums RSTIME (time when virtual machine was actually running)
-  #
-  # @param [OpenNebula::VirtualMachine] vm virtual machine
-  #
-  # @return [Integer] RSTIME
-  def sum_rstime(vm)
-    rstime = 0
-    vm.each 'HISTORY_RECORDS/HISTORY' do |h|
-      next unless h['RSTIME'] && h['RETIME'] && h['RSTIME'] != '0'
-      if h['RETIME'] == '0' && STATES[vm['STATE'].to_i] != 'completed'
-        rstime += Time.now.to_i - h['RSTIME'].to_i
-        next
-      end
-      if h['RSTIME'].to_i > h['RETIME'].to_i
-        logger.warn('Skipping malformed record. '\
-                    "VM with id #{vm['ID']} has wrong CpuDuration.")
-        rstime = nil
-        break
-      end
-      rstime += h['RETIME'].to_i - h['RSTIME'].to_i
-    end
-
-    rstime
-  end
-
-  # Sums disk size of all disks within the virtual machine
-  #
-  # @param [OpenNebula::VirtualMachine] vm virtual machine
-  #
-  # @return [Integer] sum of disk sizes in GB rounded up
-  def sum_disk_size(vm)
-    disk_size = 'NULL'
-    vm.each 'TEMPLATE/DISK' do |disk|
-      return 'NULL' unless disk['SIZE']
-
-      size = parse(disk['SIZE'], NUMBER, nil)
-      unless size
-        logger.warn("Disk size invalid for VM with id #{vm['ID']}.")
-        return 'NULL'
-      end
-      disk_size = disk_size.to_i + size.to_i
-    end
-
-    disk_size = (disk_size/1000.0).ceil unless disk_size.to_i == 0
-    disk_size
-  end
-
   # Sidekiq specific method, specifies the purpose of the worker
   #
-  # @param [String] vms IDs of virtual machines to process in form of numbers separated by '|' (easier for cooperation with redis)
+  # @param [String] vms IDs of virtual machines to process in form of numbers separated by '|'
+  # (easier for cooperation with redis)
   # @param [String] file_number number of the output file
   def perform(vms, file_number)
     OneacctExporter::Log.setup_log_level(logger)
@@ -229,9 +185,18 @@ class OneWorker
       vm = load_vm(vm_id, oda)
       next unless vm
 
-      logger.debug("Processing vm with id: #{vm_id}.")
-      vm_data = process_vm(vm, user_map, image_map)
-      next unless vm_data
+      begin
+        logger.debug("Processing vm with id: #{vm_id}.")
+        vm_data = process_vm(vm, user_map, image_map)
+
+        validator = DataValidators::ApelDataValidator.new(logger) if Settings.output['output_type'] == APEL_OT
+        validator = DataValidators::PbsDataValidator.new(logger) if Settings.output['output_type'] == PBS_OT
+
+        vm_data = validator.validate_data(vm_data) if validator
+      rescue Errors::ValidationError => e
+        logger.error("Error occured during processing of vm with id: #{vm_id}. #{e.message}")
+        next
+      end
 
       logger.debug("Adding vm with data: #{vm_data} for export.")
       data << vm_data
@@ -241,6 +206,9 @@ class OneWorker
   end
 
   # Write processed data into output directory
+  #
+  # @param [Hash] data data to be written into file
+  # @param [Fixnum] file_number sequence number of file data will be written to
   def write_data(data, file_number)
     logger.debug('Creating writer...')
     ow = OneWriter.new(data, file_number, logger)
@@ -249,9 +217,5 @@ class OneWorker
     msg = "Cannot write result: #{e.message}"
     logger.error(msg)
     raise msg
-  end
-
-  def parse(value, regex, substitute = 'NULL')
-    regex =~ value ? value : substitute
   end
 end

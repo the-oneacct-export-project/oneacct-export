@@ -8,12 +8,13 @@ require 'sidekiq/api'
 #
 # @attr_reader [any logger] log logger for the class
 # @attr_reader [Hash] range range of dates, requesting only virtual machines within the range
-# @attr_reader [Hash] groups user groups, requesting only virtual machines with owners that belong to one of the group
+# @attr_reader [Hash] groups user groups, requesting only virtual machines with owners that
+# belong to one of the group
 # @attr_reader [TrueClass, FalseClass] blocking says whether to run export in blocking mode or not
 # @attr_reader [Integer] timeout timeout for blocking mode
-# @attr_reader [TrueClass, FalseClass] compatibility says whether to run export in compatibility mode or not 
+# @attr_reader [TrueClass, FalseClass] compatibility says whether to run export in compatibility
+# mode or not
 class OneacctExporter
-
   attr_reader :log, :range, :groups, :blocking, :timeout, :compatibility
 
   def initialize(options, log)
@@ -36,11 +37,11 @@ class OneacctExporter
     oda = OneDataAccessor.new(@compatibility, @log)
 
     vms = []
-    #load records of virtual machines in batches
+    # load records of virtual machines in batches
     while vms = oda.vms(batch_number, @range, @groups)
       @log.info("Starting worker with batch number: #{batch_number}.")
       unless vms.empty?
-        #add a new job for every batch to the Sidekiq's queue
+        # add a new job for every batch to the Sidekiq's queue
         OneWorker.perform_async(vms.join('|'), new_file_number)
         new_file_number += 1
       end
@@ -94,8 +95,9 @@ class OneacctExporter
   # Clean output directory of previous entries
   def clean_output_dir
     output_dir = Dir.new(Settings.output['output_dir'])
-    output_dir.entries.each do |entry|
-      File.delete("#{Settings.output['output_dir']}/#{entry}") if /[0-9]{14}/ =~ entry
+    entries = output_dir.entries.select { |entry| entry != '.' && entry != '..' }
+    entries.each do |entry|
+      File.delete("#{output_dir.path}/#{entry}")
     end
   end
 end
