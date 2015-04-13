@@ -9,6 +9,7 @@ require 'oneacct_exporter/log'
 require 'settings'
 require 'data_validators/apel_data_validator'
 require 'data_validators/pbs_data_validator'
+require 'data_validators/logstash_data_validator'
 require 'output_types'
 require 'errors'
 
@@ -25,16 +26,21 @@ class OneWorker
   def output_type_specific_data
     data = {}
     if Settings.output['output_type'] == PBS_OT && Settings.output['pbs']
-      data['realm'] = Settings.output.pbs['realm'] ||= 'META'
-      data['pbs_queue'] = Settings.output.pbs['queue'] ||= 'cloud'
-      data['scratch_type'] = Settings.output.pbs['scratch_type'] ||= 'local'
-      data['host'] = Settings.output.pbs['host_identifier'] ||= 'on_localhost'
+      data['realm'] = Settings.output.pbs['realm']
+      data['pbs_queue'] = Settings.output.pbs['queue']
+      data['scratch_type'] = Settings.output.pbs['scratch_type']
+      data['host'] = Settings.output.pbs['host_identifier']
     end
 
     if Settings.output['output_type'] == APEL_OT
       data['endpoint'] = Settings.output.apel['endpoint'].chomp('/')
       data['site_name'] = Settings.output.apel['site_name']
       data['cloud_type'] = Settings.output.apel['cloud_type']
+    end
+
+    if Settings.output['output_type'] == LOGSTASH_OT
+      data['host'] = Settings.output.logstash['host']
+      data['port'] = Settings.output.logstash['port']
     end
 
     data
@@ -191,6 +197,7 @@ class OneWorker
 
         validator = DataValidators::ApelDataValidator.new(logger) if Settings.output['output_type'] == APEL_OT
         validator = DataValidators::PbsDataValidator.new(logger) if Settings.output['output_type'] == PBS_OT
+        validator = DataValidators::LogstashDataValidator.new(logger) if Settings.output['output_type'] == LOGSTASH_OT
 
         vm_data = validator.validate_data(vm_data) if validator
       rescue Errors::ValidationError => e

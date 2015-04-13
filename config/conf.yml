@@ -2,17 +2,20 @@
 defaults: &defaults
   output:
     output_dir: /var/spool/apel/outgoing/00000000 # Directory for outgoing messages
-    output_type: apel-0.2 # Format of outgoing messages. apel-0.2 is currently the only option
+    output_type: apel-0.2 # Format of outgoing messages. Choices are: apel-0.2, pbs-0.1, logstash-0.1
     num_of_vms_per_file: 500 # Maximum number of virtual machine records per one output file
-    apel: #Options for apel output format
+    apel: # Options for apel output format
       site_name: Undefined # Usually a short provider name, e.g. CESNET
       cloud_type: OpenNebula # CMF type, only OpenNebula is supported
       endpoint: https://occi.localhost.com:11443/ # URL of your OCCI endpoint, e.g. https://fqdn.example.com:11443/
     pbs: # Options for pbs output format
       realm: REALM # Owner's realm, e.g. META
       queue: cloud # Queue name
-      scratch_type: local #data store type
-      host_identifier: on_localhost #identifier for host opennebula is running on
+      scratch_type: local # Data store type
+      host_identifier: on_localhost # Identifier for host opennebula is running on
+    logstash: # Options for logstash output format
+      host: localhost # Host OpenNebula is running on
+      port: 11443 # Port OpenNebula's RPC is listening on
   logging:
     log_type: file # Two options: file, syslog. Defaults to stdout
     log_file: /var/log/oneacct-export/oneacct-export.log # Used when type file selected
@@ -52,6 +55,9 @@ test:
       queue: <placeholder>
       scratch_type: <placeholder>
       host_identifier: <placeholder>
+    logstash:
+      host: <placeholder>
+      port: <placeholder>
   logging:
     log_type: <placeholder>
     log_file: <placeholder>

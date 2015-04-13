@@ -124,7 +124,7 @@ describe OneacctOpts do
       Settings.logging['log_file'] = '/var/log/oneacct.log'
     end
 
-    context 'with missing mandatory paramter' do
+    context 'with missing mandatory parameter' do
       context 'output_dir' do
         before :example do
           Settings.output['output_dir'] = nil
@@ -146,7 +146,36 @@ describe OneacctOpts do
       end
     end
 
-    context 'with missing mandatory paramter of Apel output type' do
+    context 'with logging set to file without file specified' do
+      before :example do
+        Settings.logging['log_type'] = 'file'
+        Settings.logging['log_file'] = nil
+      end
+
+      it 'fails with ArgumentError' do
+        expect { OneacctOpts.check_settings_restrictions }.to raise_error(ArgumentError)
+      end
+    end
+
+    context 'with non existing template' do
+      before :example do
+        allow(OneWriter).to receive(:template_filename) { 'nonexisting_file' }
+      end
+
+      it 'fails with ArgumentError' do
+        expect { OneacctOpts.check_settings_restrictions }.to raise_error(ArgumentError)
+      end
+    end
+
+    context 'with all settings correct' do
+      it 'finishes without any failure' do
+        OneacctOpts.check_settings_restrictions
+      end
+    end
+  end
+
+  describe '#check_output_type_specific_settings' do
+    context 'with missing mandatory parameter of Apel output type' do
       before :example do
         Settings.output['output_type'] = 'apel-0.2'
       end
@@ -182,7 +211,7 @@ describe OneacctOpts do
       end
     end
 
-    context 'with missing mandatory paramter of PBS output type' do
+    context 'with missing mandatory parameter of PBS output type' do
       before :example do
         Settings.output['output_type'] = 'pbs-0.1'
       end
@@ -192,8 +221,9 @@ describe OneacctOpts do
           Settings.output.pbs['realm'] = nil
         end
 
-        it 'fails with ArgumentError' do
-          expect { OneacctOpts.check_settings_restrictions }.to raise_error(ArgumentError)
+        it 'replaces it with default value "META"' do
+          OneacctOpts.check_settings_restrictions
+          expect(Settings.output.pbs['realm']).to eq('META')
         end
       end
 
@@ -202,8 +232,9 @@ describe OneacctOpts do
           Settings.output.pbs['queue'] = nil
         end
 
-        it 'fails with ArgumentError' do
-          expect { OneacctOpts.check_settings_restrictions }.to raise_error(ArgumentError)
+        it 'replaces it with default value "cloud"' do
+          OneacctOpts.check_settings_restrictions
+          expect(Settings.output.pbs['queue']).to eq('cloud')
         end
       end
 
@@ -212,8 +243,9 @@ describe OneacctOpts do
           Settings.output.pbs['scratch_type'] = nil
         end
 
-        it 'fails with ArgumentError' do
-          expect { OneacctOpts.check_settings_restrictions }.to raise_error(ArgumentError)
+        it 'replaces it with default value "local"' do
+          OneacctOpts.check_settings_restrictions
+          expect(Settings.output.pbs['scratch_type']).to eq('local')
         end
       end
 
@@ -222,36 +254,36 @@ describe OneacctOpts do
           Settings.output.pbs['host_identifier'] = nil
         end
 
-        it 'fails with ArgumentError' do
-          expect { OneacctOpts.check_settings_restrictions }.to raise_error(ArgumentError)
+        it 'replaces it with default value "on_localhost"' do
+          OneacctOpts.check_settings_restrictions
+          expect(Settings.output.pbs['host_identifier']).to eq('on_localhost')
         end
       end
     end
 
-    context 'with logging set to file without file specified' do
+    context 'with missing mandatory parameter of logstash output type' do
       before :example do
-        Settings.logging['log_type'] = 'file'
-        Settings.logging['log_file'] = nil
+        Settings.output['output_type'] = 'logstash-0.1'
       end
 
-      it 'fails with ArgumentError' do
-        expect { OneacctOpts.check_settings_restrictions }.to raise_error(ArgumentError)
-      end
-    end
+      context 'host' do
+        before :example do
+          Settings.output.logstash['host'] = nil
+        end
 
-    context 'with non existing template' do
-      before :example do
-        allow(OneWriter).to receive(:template_filename) { 'nonexisting_file' }
+        it 'fails with ArgumentError' do
+          expect { OneacctOpts.check_settings_restrictions }.to raise_error(ArgumentError)
+        end
       end
 
-      it 'fails with ArgumentError' do
-        expect { OneacctOpts.check_settings_restrictions }.to raise_error(ArgumentError)
-      end
-    end
+      context 'port' do
+        before :example do
+          Settings.output.logstash['port'] = nil
+        end
 
-    context 'with all settings correct' do
-      it 'finishes without any failure' do
-        OneacctOpts.check_settings_restrictions
+        it 'fails with ArgumentError' do
+          expect { OneacctOpts.check_settings_restrictions }.to raise_error(ArgumentError)
+        end
       end
     end
   end
