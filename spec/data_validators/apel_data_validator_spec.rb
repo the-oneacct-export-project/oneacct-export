@@ -3,7 +3,7 @@ require 'spec_helper'
 module DataValidators
   describe ApelDataValidator do
 
-    subject { ApelDataValidator.new }
+    subject { ApelDataValidator.new(Logger.new('/dev/null')) }
 
     describe '.validate_data' do
       let(:data) do

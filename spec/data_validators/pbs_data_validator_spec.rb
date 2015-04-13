@@ -3,7 +3,7 @@ require 'spec_helper'
 module DataValidators
   describe PbsDataValidator do
 
-    subject { PbsDataValidator.new }
+    subject { PbsDataValidator.new(Logger.new('/dev/null')) }
 
     describe '.validate_data' do
       let(:data) do

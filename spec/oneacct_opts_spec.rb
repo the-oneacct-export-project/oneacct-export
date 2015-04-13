@@ -257,6 +257,17 @@ describe OneacctOpts do
   end
 
   describe '#parse' do
+    before :example do
+      Settings.output['output_dir'] = '/some/output/dir'
+      Settings.output['output_type'] = 'pbs-v0.2'
+      Settings.output.pbs['realm'] = 'REALM'
+      Settings.output.pbs['queue'] = 'queue'
+      Settings.output.pbs['scratch_type'] = 'local'
+      Settings.output.pbs['host_identifier'] = 'on_localhost'
+      Settings.logging['log_type'] = 'file'
+      Settings.logging['log_file'] = '/var/log/oneacct.log'
+    end
+
     let(:args) { ['--records-from', '01.01.2014', '--records-to', '01.07.2014', '--include-groups', 'aaa,bbb,ccc', '-b', '-t', '50', '-c'] }
 
     it 'returns correctly parsed options' do

@@ -5,7 +5,7 @@ module DataValidators
     #
     # @param data [Hash] data to be validated
     # @return [Hash] data with default values set if necessary
-    def validate_data(_data = nil)
+    def validate_data(data = nil)
       fail Errors::NotImplementedError, "#{__method__} is just a stub!"
     end
   end
