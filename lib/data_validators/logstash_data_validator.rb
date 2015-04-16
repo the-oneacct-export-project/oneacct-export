@@ -74,8 +74,6 @@ module DataValidators
       end
       valid_data['disks'] = disks
 
-      valid_data['timestamp'] = Time.now
-
       valid_data
     end
   end

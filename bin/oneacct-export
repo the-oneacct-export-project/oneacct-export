@@ -6,6 +6,7 @@ require 'oneacct_exporter'
 require 'oneacct_exporter/log'
 require 'settings'
 require 'fileutils'
+require 'json'
 require 'oneacct_opts'
 
 # parse options from command line
