@@ -138,6 +138,8 @@ describe OneWorker do
       Settings.output.apel['endpoint'] = 'machine.hogwarts.co.uk'
       Settings.output.apel['site_name'] = 'Hogwarts'
       Settings.output.apel['cloud_type'] = 'OpenNebula'
+
+      allow(vm).to receive(:state_str) { 'DONE' }
     end
 
     let(:vm) do
@@ -161,6 +163,7 @@ describe OneWorker do
       data['user_name'] = 'uname'
       data['group_name'] = 'gname'
       data['status'] = '6'
+      data['status_name'] = 'DONE'
       data['cpu_count'] = '1'
       data['network_inbound'] = '43557888'
       data['network_outbound'] = '376832'

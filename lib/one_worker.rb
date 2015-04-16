@@ -99,6 +99,7 @@ class OneWorker
     data['user_name'] = vm['UNAME']
     data['group_name'] = vm['GNAME']
     data['status'] = vm['STATE']
+    data['status_name'] = vm.state_str
     data['cpu_count'] = vm['TEMPLATE/VCPU']
     data['network_inbound'] = vm['NET_TX']
     data['network_outbound'] = vm['NET_RX']

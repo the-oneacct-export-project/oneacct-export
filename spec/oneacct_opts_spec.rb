@@ -175,6 +175,17 @@ describe OneacctOpts do
   end
 
   describe '#check_output_type_specific_settings' do
+    before :example do
+      Settings.output['output_dir'] = '/some/output/dir'
+      Settings.output['output_type'] = 'pbs-v0.2'
+      Settings.output.pbs['realm'] = 'REALM'
+      Settings.output.pbs['queue'] = 'queue'
+      Settings.output.pbs['scratch_type'] = 'local'
+      Settings.output.pbs['host_identifier'] = 'on_localhost'
+      Settings.logging['log_type'] = 'file'
+      Settings.logging['log_file'] = '/var/log/oneacct.log'
+    end
+
     context 'with missing mandatory parameter of Apel output type' do
       before :example do
         Settings.output['output_type'] = 'apel-0.2'
