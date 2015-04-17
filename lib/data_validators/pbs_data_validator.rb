@@ -70,12 +70,12 @@ module DataValidators
         history << history_record
       end
 
-      history.last['state'] = 'E' if data['status'] == COMPLETED
+      history.last['state'] = 'E' if data['status_code'] == COMPLETED
       valid_data['history'] = history
 
       valid_data['machine_name'] = default(data['machine_name'], :string, "one-#{valid_data['vm_uuid']}")
 
-      duration = sum_rstime(data['history'], data['status'] == COMPLETED, valid_data['vm_uuid'])
+      duration = sum_rstime(data['history'], data['status_code'] == COMPLETED, valid_data['vm_uuid'])
       valid_data['duration'] = Time.at(duration)
 
       valid_data['disk_size'] = sum_disk_size(data['disks'], valid_data['vm_uuid'])

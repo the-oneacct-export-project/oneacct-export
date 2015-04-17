@@ -98,8 +98,8 @@ class OneWorker
     data['user_dn'] ||= user_map[data['user_id']]
     data['user_name'] = vm['UNAME']
     data['group_name'] = vm['GNAME']
-    data['status'] = vm['STATE']
-    data['status_name'] = vm.state_str
+    data['status_code'] = vm['STATE']
+    data['status'] = vm.state_str
     data['cpu_count'] = vm['TEMPLATE/VCPU']
     data['network_inbound'] = vm['NET_TX']
     data['network_outbound'] = vm['NET_RX']
@@ -210,7 +210,7 @@ class OneWorker
       data << vm_data
     end
 
-    write_data(data, file_number)
+    write_data(data, file_number) unless data.empty?
   end
 
   # Write processed data into output directory

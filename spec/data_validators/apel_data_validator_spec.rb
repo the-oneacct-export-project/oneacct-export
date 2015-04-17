@@ -21,7 +21,8 @@ module DataValidators
         data['group_id'] = '0'
         data['user_name'] = 'uname'
         data['group_name'] = 'gname'
-        data['status'] = '3'
+        data['status_code'] = '3'
+        data['status'] = 'STATUS'
         data['cpu_count'] = '1'
         data['network_inbound'] = '4154845418'
         data['network_outbound'] = '6326418701'
@@ -67,6 +68,7 @@ module DataValidators
         valid_data['group_id'] = '0'
         valid_data['user_name'] = 'uname'
         valid_data['group_name'] = 'gname'
+        valid_data['status_code'] = '3'
         valid_data['status'] = 'started'
         valid_data['cpu_count'] = '1'
         valid_data['network_inbound'] = 3
@@ -303,10 +305,11 @@ module DataValidators
         end
       end
 
-      context 'without status' do
+      context 'without status code' do
         before :example do
-          data['status'] = nil
+          data['status_code'] = nil
           valid_data['status'] = 'NULL'
+          valid_data['status_code'] = nil
         end
 
         it 'replaces status with "NULL"' do
@@ -314,9 +317,9 @@ module DataValidators
         end
       end
 
-      context 'with status out of range' do
+      context 'with status coce out of range' do
         before :example do
-          data['status'] = '42'
+          data['status_code'] = '42'
         end
 
         it 'it fails with ValidationError' do
@@ -324,10 +327,11 @@ module DataValidators
         end
       end
 
-      context 'with status that is not a number' do
+      context 'with status code that is not a number' do
         before :example do
-          data['status'] = 'string'
+          data['status_code'] = 'string'
           valid_data['status'] = 'NULL'
+          valid_data['status_code'] = 'string'
         end
 
         it 'replaces status with "NULL"' do
@@ -390,7 +394,7 @@ module DataValidators
 
       context 'without network inbound' do
         before :example do
-          data['network_inbound'] = '0'
+          data['network_inbound'] = nil
           valid_data['network_inbound'] = 0
         end
 
@@ -412,7 +416,7 @@ module DataValidators
 
       context 'without network outbound' do
         before :example do
-          data['network_outbound'] = '0'
+          data['network_outbound'] = nil
           valid_data['network_outbound'] = 0
         end
 

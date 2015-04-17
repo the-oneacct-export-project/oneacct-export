@@ -71,10 +71,10 @@ module DataValidators
       valid_data['user_name'] = default(data['user_name'], :string, DEFAULT_VALUE)
       valid_data['group_name'] = default(data['group_name'], :string, nil)
 
-      status = default(data['status'], :number, nil)
+      status = default(data['status_code'], :number, nil)
       if status
         status = status.to_i
-        fail_validation 'Status' unless status.to_s == data['status'] && status < STATES.size && status >= 0
+        fail_validation 'Status' unless status.to_s == data['status_code'] && status < STATES.size && status >= 0
       end
       valid_data['status'] = status ? STATES[status] : 'NULL'
 

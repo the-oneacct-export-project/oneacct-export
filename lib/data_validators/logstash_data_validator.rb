@@ -34,8 +34,8 @@ module DataValidators
       fail_validation 'group_id' unless number?(data['group_id'])
       valid_data['group_id'] = data['group_id'].to_i
 
-      fail_validation 'status' unless number?(data['status'])
-      valid_data['status'] = data['status'].to_i
+      fail_validation 'status_code' unless number?(data['status_code'])
+      valid_data['status_code'] = data['status_code'].to_i
 
       fail_validation 'cpu_count' unless number?(data['cpu_count'])
       valid_data['cpu_count'] = data['cpu_count'].to_i
@@ -46,6 +46,7 @@ module DataValidators
       fail_validation 'memory' unless number?(data['memory'])
       valid_data['memory'] = data['memory'].to_i
 
+      fail_validation 'history' unless data['history']
       history = []
       data['history'].each do |h|
         history_record = h.clone
@@ -64,11 +65,12 @@ module DataValidators
       end
       valid_data['history'] = history
 
+      fail_validation 'disks' unless data['disks']
       disks = []
       data['disks'].each do |d|
         disk = d.clone
-        fail_validation 'disk size' unless number?(d['size'])
-        disk['size'] = d['size'].to_i
+        disk['size'] = d['size']
+        disk['size'] = d['size'].to_i if number?(d['size'])
 
         disks << disk
       end
