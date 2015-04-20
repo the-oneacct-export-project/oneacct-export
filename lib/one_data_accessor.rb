@@ -9,7 +9,8 @@ require 'input_validator'
 # @attr_reader [any logger] logger
 # @attr_reader [Integer] batch_size number of vm records to request
 # @attr_reader [OpenNebula::Client] client client for communicaton with OpenNebula
-# @attr_reader [TrueClass, FalseClass] compatibility whether or not communicate in compatibility mode (omit some newer API functions)
+# @attr_reader [TrueClass, FalseClass] compatibility whether or not communicate in
+# compatibility mode (omit some newer API functions)
 class OneDataAccessor
   include Errors
   include InputValidator
@@ -23,7 +24,7 @@ class OneDataAccessor
     @compatibility = compatibility
 
     @batch_size = Settings.output['num_of_vms_per_file'] ? Settings.output['num_of_vms_per_file'] : 500
-    fail ArgumentError, 'Wrong number of vms per file.' unless is_number?(@batch_size)
+    fail ArgumentError, 'Wrong number of vms per file.' unless number?(@batch_size)
 
     @compatibility_vm_pool = nil
 
@@ -34,7 +35,7 @@ class OneDataAccessor
   def initialize_client
     secret = Settings['xml_rpc'] ? Settings.xml_rpc['secret'] : nil
     endpoint = Settings['xml_rpc'] ? Settings.xml_rpc['endpoint'] : nil
-    fail ArgumentError, "#{endpoint} is not a valid URL." if endpoint && !is_uri?(endpoint)
+    fail ArgumentError, "#{endpoint} is not a valid URL." if endpoint && !uri?(endpoint)
 
     @client = OpenNebula::Client.new(secret, endpoint)
   end
@@ -48,7 +49,7 @@ class OneDataAccessor
   def mapping(pool_class, xpath)
     @log.debug("Generating mapping for class: #{pool_class} and xpath: '#{xpath}'.")
     pool = pool_class.new(@client)
-    #call info_all method instead of info on pools that support it
+    # call info_all method instead of info on pools that support it
     if pool.respond_to? 'info_all'
       rc = pool.info_all
       check_retval(rc, Errors::ResourceRetrievalError)
@@ -57,7 +58,7 @@ class OneDataAccessor
       check_retval(rc, Errors::ResourceRetrievalError)
     end
 
-    #generate mapping
+    # generate mapping
     map = {}
     pool.each do |item|
       unless item['ID']
@@ -76,7 +77,7 @@ class OneDataAccessor
   #
   # @return [OpenNebula::VirtualMachine] virtual machine
   def vm(vm_id)
-    fail ArgumentError, "#{vm_id} is not a valid id." unless is_number?(vm_id)
+    fail ArgumentError, "#{vm_id} is not a valid id." unless number?(vm_id)
     @log.debug("Retrieving virtual machine with id: #{vm_id}.")
     vm = OpenNebula::VirtualMachine.new(OpenNebula::VirtualMachine.build_xml(vm_id), @client)
     rc = vm.info
@@ -93,7 +94,7 @@ class OneDataAccessor
   # @return [Array] array with virtual machines' IDs
   def vms(batch_number, range, groups)
     vms = []
-    #load specific batch
+    # load specific batch
     vm_pool = load_vm_pool(batch_number)
     return nil if vm_pool.count == 0
 
@@ -104,7 +105,7 @@ class OneDataAccessor
         next
       end
 
-      #skip unsuitable virtual machines
+      # skip unsuitable virtual machines
       next unless want?(vm, range, groups)
 
       vms << vm['ID'].to_i
@@ -145,12 +146,12 @@ class OneDataAccessor
   #
   # @param [Integer] batch_number
   def load_vm_pool(batch_number)
-    fail ArgumentError, "#{batch_number} is not a valid number" unless is_number?(batch_number)
+    fail ArgumentError, "#{batch_number} is not a valid number" unless number?(batch_number)
     @log.debug("Loading vm pool with batch number: #{batch_number}.")
     from = batch_number * @batch_size
     to = (batch_number + 1) * @batch_size - 1
 
-    #if in compatibility mode, whole virtual machine pool has to be loaded for the first time
+    # if in compatibility mode, whole virtual machine pool has to be loaded for the first time
     if @compatibility
       unless @compatibility_vm_pool
         vm_pool = OpenNebula::VirtualMachinePool.new(@client)

@@ -1,0 +1,3 @@
+<% for vm in @data -%>
+{  "@source": "<%= vm['host'] %>_<%= vm['port'] %>",  "@tags": [  "history"  ],  "@fields": <%= vm.to_json %>,  "@timestamp": "<%= Time.at(vm['start_time']).utc.strftime('%FT%T%:z') %>" }
+<% end -%>
