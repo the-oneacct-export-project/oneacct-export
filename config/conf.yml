@@ -12,7 +12,7 @@ defaults: &defaults
       realm: REALM # Owner's realm, e.g. META
       queue: cloud # Queue name
       scratch_type: local # Data store type
-      host_identifier: on_localhost # Identifier for host opennebula is running on
+      host_identifier: on_localhost # Identifier for host OpenNebula is running on
     logstash: # Options for logstash output format
       host: localhost # Host OpenNebula is running on
       port: 11443 # Port OpenNebula's RPC is listening on
