@@ -1,5 +1,5 @@
 module OutputTypes
-  APEL_OT = 'apel-0.2'
-  PBS_OT = 'pbs-0.1'
-  LOGSTASH_OT = 'logstash-0.1'
+  APEL_OT = %w(apel-0.2 apel-0.4)
+  PBS_OT = %w(pbs-0.1)
+  LOGSTASH_OT = %w(logstash-0.1)
 end

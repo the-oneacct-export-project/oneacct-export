@@ -8,6 +8,7 @@ defaults: &defaults
       site_name: Undefined # Usually a short provider name, e.g. CESNET
       cloud_type: OpenNebula # CMF type, only OpenNebula is supported
       endpoint: https://occi.localhost.com:11443/ # URL of your OCCI endpoint, e.g. https://fqdn.example.com:11443/
+      # cloud_compute_service: # Name identifying cloud resource within the site. Allows multiple cloud resources within a site. i.e. a level of granularity.
     pbs: # Options for pbs output format
       realm: REALM # Owner's realm, e.g. META
       queue: cloud # Queue name

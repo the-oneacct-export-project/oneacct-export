@@ -50,6 +50,8 @@ module DataValidators
         data['user_dn'] = '/MY=STuPID/CN=DN/CN=HERE'
         data['image_name'] = 'https://appdb.egi.eu/store/vo/image/blablablabla/'
 
+        data['cloud_compute_service'] = 'CloudComputeServiceValue'
+
         data
       end
 
@@ -100,6 +102,8 @@ module DataValidators
         valid_data['duration'] = Time.at(685)
         valid_data['suspend'] = 425
         valid_data['disk_size'] = 52608
+
+        valid_data['cloud_compute_service'] = 'CloudComputeServiceValue'
 
         valid_data
       end
@@ -489,6 +493,17 @@ module DataValidators
         end
 
         it 'replaces disk size with 0' do
+          expect(subject.validate_data(data)).to eq(valid_data)
+        end
+      end
+
+      context 'without cloud compute service' do
+        before :example do
+          data['cloud_compute_service'] = nil
+          valid_data['cloud_compute_service'] = 'NULL'
+        end
+
+        it 'replaces cloud compute service with "NULL"' do
           expect(subject.validate_data(data)).to eq(valid_data)
         end
       end

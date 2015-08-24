@@ -13,9 +13,10 @@ describe OneWorker do
         Settings.output.apel['endpoint'] = 'machine.hogwarts.co.uk'
         Settings.output.apel['site_name'] = 'Hogwarts'
         Settings.output.apel['cloud_type'] = 'OpenNebula'
+        Settings.output.apel['cloud_compute_service'] = 'CloudComputeServiceValue'
       end
 
-      let(:output_type_specific_data) { {'endpoint' => 'machine.hogwarts.co.uk', 'site_name' => 'Hogwarts', 'cloud_type' => 'OpenNebula'} }
+      let(:output_type_specific_data) { {'endpoint' => 'machine.hogwarts.co.uk', 'site_name' => 'Hogwarts', 'cloud_type' => 'OpenNebula', 'cloud_compute_service' => 'CloudComputeServiceValue'} }
 
       it 'returns data specific for apel output type in form of hash' do
         expect(subject.output_type_specific_data).to eq(output_type_specific_data)
@@ -138,6 +139,7 @@ describe OneWorker do
       Settings.output.apel['endpoint'] = 'machine.hogwarts.co.uk'
       Settings.output.apel['site_name'] = 'Hogwarts'
       Settings.output.apel['cloud_type'] = 'OpenNebula'
+      Settings.output.apel['cloud_compute_service'] = nil
 
       allow(vm).to receive(:state_str) { 'DONE' }
     end
@@ -153,6 +155,7 @@ describe OneWorker do
       data['endpoint'] = 'machine.hogwarts.co.uk'
       data['site_name'] = 'Hogwarts'
       data['cloud_type'] = 'OpenNebula'
+      data['cloud_compute_service'] = nil
 
       data['vm_uuid'] = '36551'
       data['start_time'] = '1383741160'
@@ -221,6 +224,7 @@ describe OneWorker do
         data.delete 'endpoint'
         data.delete 'site_name'
         data.delete 'cloud_type'
+        data.delete 'cloud_compute_service'
       end
 
       let(:filename) { 'one_worker_vm_dn01.xml' }

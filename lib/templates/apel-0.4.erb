@@ -1,0 +1,31 @@
+APEL-cloud-message: v0.4
+<% for vm in @data -%>
+VMUUID: <%= vm['endpoint'] %>/compute/<%= vm['vm_uuid'] %> <%= vm['start_time'].strftime('%F %T%:z') %>
+SiteName: <%= vm['site_name']%>
+CloudComputeService: <%= vm['cloud_compute_service']%>
+MachineName: <%= vm['machine_name']%>
+LocalUserId: <%= vm['user_id']%>
+LocalGroupId: <%= vm['group_id']%>
+GlobalUserName: <%= vm['user_dn']%>
+<% if vm['group_name']-%>
+FQAN: /<%= vm['group_name']%>/Role=NULL/Capability=NULL
+<% else -%>
+FQAN: NULL
+<% end -%>
+Status: <%= vm['status']%>
+StartTime: <%= vm['start_time'].to_i%>
+EndTime: <%= vm['end_time'].to_s == vm['end_time'] ? vm['end_time'] : vm['end_time'].to_i%>
+SuspendDuration: <%= vm['suspend']%>
+WallDuration: <%= vm['duration'].to_i != 0 ? vm['duration'].to_i : 'NULL'%>
+CpuDuration: <%= vm['duration'].to_i != 0 ? vm['duration'].to_i : 'NULL'%>
+CpuCount: <%= vm['cpu_count']%>
+NetworkType: NULL
+NetworkInbound: <%= vm['network_inbound']%>
+NetworkOutbound: <%= vm['network_outbound']%>
+Memory: <%= vm['memory']%>
+Disk: <%= vm['disk_size'].to_i != 0 ? (vm['disk_size']/1000.0).ceil : vm['disk_size']%>
+StorageRecordId: NULL
+ImageId: <%= vm['image_name']%>
+CloudType: OpenNebula
+%%
+<% end -%>

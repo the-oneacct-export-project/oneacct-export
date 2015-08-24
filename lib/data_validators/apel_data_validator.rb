@@ -42,7 +42,8 @@ module DataValidators
     # valid_data['network_outbound'] - defaults to 0
     # valid_data['memory'] - defaults to 0
     # valid_data['image_name'] - defaults to NULL
-    # valid_data['disk_size']  -defaults to NULL
+    # valid_data['disk_size'] - defaults to NULL
+    # valid_data['cloud_compute_service'] - defaults to NULL
     def validate_data(data = nil)
       unless data
         fail Errors::ValidationError, 'Skipping a malformed record. '\
@@ -92,6 +93,8 @@ module DataValidators
       valid_data['image_name'] = default(data['image_name'], :string, DEFAULT_VALUE)
       disk_size_sum = sum_disk_size(data['disks'], valid_data['vm_uuid'])
       valid_data['disk_size'] = disk_size_sum ? disk_size_sum : 'NULL'
+
+      valid_data['cloud_compute_service'] = default(data['cloud_compute_service'], :string, DEFAULT_VALUE)
 
       valid_data
     end
