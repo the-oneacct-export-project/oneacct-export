@@ -20,14 +20,14 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 2.0.0'
 
   spec.add_development_dependency 'bundler', '~> 1.6'
-  spec.add_development_dependency 'rake', '~> 10.0'
-  spec.add_development_dependency 'rspec', '~> 3.0.0'
+  spec.add_development_dependency 'rake', '~> 10.4'
+  spec.add_development_dependency 'rspec', '~> 3.3'
   spec.add_development_dependency 'fuubar', '~> 2.0.0'
-  spec.add_development_dependency 'simplecov', '~> 0.9.0'
+  spec.add_development_dependency 'simplecov', '~> 0.10'
   spec.add_development_dependency 'rubygems-tasks', '~> 0.2.4'
 
   spec.add_runtime_dependency 'opennebula', '~> 4.6.0'
-  spec.add_runtime_dependency 'syslogger', '~> 1.6.0'
-  spec.add_runtime_dependency 'sidekiq', '~> 3.2.6'
+  spec.add_runtime_dependency 'syslogger', '~> 1.6'
+  spec.add_runtime_dependency 'sidekiq', '~> 3.4'
   spec.add_runtime_dependency 'settingslogic', '~> 2.0.9'
 end
