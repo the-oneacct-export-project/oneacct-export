@@ -76,6 +76,7 @@ module DataValidators
         valid_data['network_inbound'] = 3
         valid_data['network_outbound'] = 5
         valid_data['memory'] = '1736960'
+        valid_data['number_of_public_ips'] = 0
         history = []
         rec = {}
         rec['start_time'] = '1383741169'

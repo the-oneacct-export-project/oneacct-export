@@ -171,6 +171,7 @@ describe OneWorker do
       data['network_inbound'] = '43557888'
       data['network_outbound'] = '376832'
       data['memory'] = '1736960'
+      data['number_of_public_ips'] = 1
       history = []
       rec = {}
       rec['start_time'] = '1383741169'
@@ -402,6 +403,32 @@ describe OneWorker do
 
       it 'returns emtpy array' do
         expect(subject.disk_records(vm)).to be_empty
+      end
+    end
+  end
+
+  describe ".number_of_public_ips" do
+    let(:vm) do
+      xml = File.read("#{GEM_DIR}/mock/#{filename}")
+      OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))
+    end
+
+    context "with multiple NICs (multiple IPs with duplicates) " do
+      let(:filename) { 'one_worker_vm_number_of_public_ips_01.xml' }
+      it "returns the correct number of public IPs" do
+        expect(subject.number_of_public_ips(vm)).to eq 8
+      end
+    end
+    context "with no NICs" do
+      let(:filename) { 'one_worker_vm_number_of_public_ips_02.xml' }
+      it "returns 0, the correct number of IPs" do
+        expect(subject.number_of_public_ips(vm)).to eq 0
+      end
+    end
+    context "with single NIC (multiple IPs with duplicates)" do
+      let(:filename) { 'one_worker_vm_number_of_public_ips_03.xml' }
+      it "returns the correct number of public IPs" do
+        expect(subject.number_of_public_ips(vm)).to eq 8
       end
     end
   end

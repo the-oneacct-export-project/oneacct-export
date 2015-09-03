@@ -12,6 +12,7 @@ require 'data_validators/pbs_data_validator'
 require 'data_validators/logstash_data_validator'
 require 'output_types'
 require 'errors'
+require 'ipaddr'
 
 # Sidekiq worker class
 class OneWorker
@@ -21,6 +22,8 @@ class OneWorker
 
   sidekiq_options retry: 5, dead: false, \
                   queue: (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'].to_sym : :default
+
+  IGNORED_NETWORKS=["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"].map {|x| IPAddr.new x}
 
   # Prepare data that are specific for output type and common for every virtual machine
   def output_type_specific_data
@@ -111,6 +114,7 @@ class OneWorker
     data['image_name'] ||= vm['TEMPLATE/DISK[1]/IMAGE_ID']
     data['history'] = history_records(vm)
     data['disks'] = disk_records(vm)
+    data['number_of_public_ips'] = number_of_public_ips(vm)
 
     data
   end
@@ -154,7 +158,23 @@ class OneWorker
     disks
   end
 
-  # Look for 'os_tpl' OCCI mixin to better identifie virtual machine's image
+  # Returns number of unique public ip addresses of vm
+  #
+  # @param [OpenNebula::VirtualMachine] vm virtual machine
+  #
+  # @return [Integer] number of unique public ip addresses represented by integer
+  def number_of_public_ips(vm)
+    all_ips = []
+    vm.each 'TEMPLATE/NIC' do |nic|
+      nic.each 'IP' do |ip|
+        all_ips << ip.text if ip_public?(ip)
+      end
+    end
+
+    all_ips.uniq.length
+  end
+
+  # Look for 'os_tpl' OCCI mixin to better identify virtual machine's image
   #
   # @param [OpenNebula::VirtualMachine] vm virtual machine
   #
@@ -226,5 +246,20 @@ class OneWorker
     msg = "Cannot write result: #{e.message}"
     logger.error(msg)
     raise msg
+  end
+
+  private
+
+  # Check if IP is public
+  #
+  # @param [String] ip address
+  #
+  # @return [Bool] true or false
+  def ip_public?(ip)
+    ip_obj = IPAddr.new(ip.text)
+    IGNORED_NETWORKS.each do |net|
+      return false if net.include? ip_obj
+    end
+    true
   end
 end

@@ -96,6 +96,8 @@ module DataValidators
 
       valid_data['cloud_compute_service'] = default(data['cloud_compute_service'], :string, DEFAULT_VALUE)
 
+      valid_data['number_of_public_ips'] = default(data['number_of_public_ips'], :number, 0)
+
       valid_data
     end
   end
