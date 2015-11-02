@@ -98,6 +98,13 @@ module DataValidators
 
       valid_data['number_of_public_ips'] = default(data['number_of_public_ips'], :number, 0)
 
+      valid_data['benchmark_type'] = default(data['benchmark_type'], :string, DEFAULT_VALUE)
+      valid_data['benchmark_value'] = default(data['benchmark_value'], :decimal, DEFAULT_VALUE)
+      if valid_data['benchmark_type'] == DEFAULT_VALUE || valid_data['benchmark_value'] == DEFAULT_VALUE
+        valid_data['benchmark_type'] = DEFAULT_VALUE
+        valid_data['benchmark_value'] = DEFAULT_VALUE
+      end
+
       valid_data
     end
   end

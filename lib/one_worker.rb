@@ -89,7 +89,7 @@ class OneWorker
   # Obtain and parse required data from vm
   #
   # @return [Hash] required data from virtual machine
-  def process_vm(vm, user_map, image_map)
+  def process_vm(vm, user_map, image_map, benchmark_map)
     data = output_type_specific_data
 
     data['vm_uuid'] = vm['ID']
@@ -115,6 +115,10 @@ class OneWorker
     data['history'] = history_records(vm)
     data['disks'] = disk_records(vm)
     data['number_of_public_ips'] = number_of_public_ips(vm)
+
+    benchmark = search_benchmark(vm, benchmark_map)
+    data['benchmark_type'] = benchmark[:benchmark_type]
+    data['benchmark_value'] = benchmark[:benchmark_value]
 
     data
   end
@@ -206,6 +210,7 @@ class OneWorker
     oda = OneDataAccessor.new(false, logger)
     user_map = create_user_map(oda)
     image_map = create_image_map(oda)
+    benchmark_map = oda.benchmark_map
 
     data = []
 
@@ -215,7 +220,7 @@ class OneWorker
 
       begin
         logger.debug("Processing vm with id: #{vm_id}.")
-        vm_data = process_vm(vm, user_map, image_map)
+        vm_data = process_vm(vm, user_map, image_map, benchmark_map)
 
         validator = DataValidators::ApelDataValidator.new(logger) if APEL_OT.include?(Settings.output['output_type'])
         validator = DataValidators::PbsDataValidator.new(logger) if PBS_OT.include?(Settings.output['output_type'])
@@ -246,6 +251,25 @@ class OneWorker
     msg = "Cannot write result: #{e.message}"
     logger.error(msg)
     raise msg
+  end
+
+  # Search benchmark type and value virtual machine.
+  #
+  # @param [OpenNebula::VirtualMachine] vm virtual machine
+  # @param [Hash] benchmark_map map of all hosts' benchmarks
+  #
+  # @return [Hash] benchmark type and value or both can be nil
+  def search_benchmark(vm, benchmark_map)
+    nil_benchmark = { :benchmark_type => nil, :benchmark_value => nil }
+    map = benchmark_map[vm['HISTORY_RECORDS/HISTORY[last()]/HID']]
+    return nil_benchmark unless map
+    return nil_benchmark unless vm['USER_TEMPLATE/OCCI_COMPUTE_MIXINS']
+
+    occi_compute_mixins = vm['USER_TEMPLATE/OCCI_COMPUTE_MIXINS'].split(/\s+/)
+    occi_compute_mixins.each do |mixin|
+      return { :benchmark_type => map[:benchmark_type], :benchmark_value => map[:mixins][mixin] } if map[:mixins].has_key?(mixin)
+    end
+    nil_benchmark
   end
 
   private

@@ -192,4 +192,49 @@ class OneDataAccessor
       fail e_klass, rc.message
     end
   end
+
+  # Check all hosts and gain benchmark name and value.
+  #
+  # @return [Hash] hosts' IDs and hash with benchmark name and value
+  def benchmark_map
+    host_pool = OpenNebula::HostPool.new(@client)
+    rc = host_pool.info
+    check_retval(rc, Errors::ResourceRetrievalError)
+
+    bench_map = {}
+
+    host_pool.each do |host|
+      structure = {}
+      benchmark_values = nil
+      benchmark_type = nil
+
+      if (benchmark_type = host['TEMPLATE/BENCHMARK_TYPE'])
+        benchmark_values = host['TEMPLATE/BENCHMARK_VALUES'].split(/\s*\n\s*/)
+      else
+        cluster_id = host['CLUSTER_ID'].to_i
+        searched_cluster = OpenNebula::Cluster.new(OpenNebula::Cluster.build_xml(cluster_id), @client)
+        rc = searched_cluster.info
+        check_retval(rc, Errors::ResourceRetrievalError)
+
+        if searched_cluster
+          if (benchmark_type = searched_cluster['TEMPLATE/BENCHMARK_TYPE'])
+            benchmark_values = searched_cluster['TEMPLATE/BENCHMARK_VALUES'].split(/\s*\n\s*/)
+          end
+        end
+      end
+
+      if benchmark_values
+        mixins = {}
+        benchmark_values.each do |value|
+          values = value.split(/\s+/, 2)
+          mixins[values[0]] = values[1]
+        end
+        structure = { :benchmark_type => benchmark_type, :mixins => mixins }
+      end
+
+      bench_map[host['ID']] = structure
+    end
+
+    bench_map
+  end
 end

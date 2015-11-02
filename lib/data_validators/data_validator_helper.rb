@@ -9,6 +9,7 @@ module DataValidators
     def default(value, condition_method, default_value)
       return string?(value) ? value : default_value if condition_method == :string
       return number?(value) ? value : default_value if condition_method == :number
+      return decimal?(value) ? value : default_value if condition_method == :decimal
       return non_zero_number?(value) ? value : default_value if condition_method == :nzn
     end
   end

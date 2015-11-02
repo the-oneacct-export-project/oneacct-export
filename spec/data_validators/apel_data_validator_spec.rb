@@ -52,6 +52,9 @@ module DataValidators
 
         data['cloud_compute_service'] = 'CloudComputeServiceValue'
 
+        data['benchmark_type'] = 'b_type_999'
+        data['benchmark_value'] = '132.68'
+
         data
       end
 
@@ -105,6 +108,9 @@ module DataValidators
         valid_data['disk_size'] = 52608
 
         valid_data['cloud_compute_service'] = 'CloudComputeServiceValue'
+
+        valid_data['benchmark_type'] = 'b_type_999'
+        valid_data['benchmark_value'] = '132.68'
 
         valid_data
       end
@@ -508,6 +514,56 @@ module DataValidators
           expect(subject.validate_data(data)).to eq(valid_data)
         end
       end
+
+      context 'without benchmark_type' do
+        before :example do
+          data['benchmark_type'] = nil
+          valid_data['benchmark_type'] = 'NULL'
+          valid_data['benchmark_value'] = 'NULL'
+        end
+
+        it 'replaced benchmark type and benchmark value with "NULL"' do
+          expect(subject.validate_data(data)).to eq(valid_data)
+        end
+      end
+
+      context 'without benchmark_value' do
+        before :example do
+          data['benchmark_value'] = nil
+          valid_data['benchmark_type'] = 'NULL'
+          valid_data['benchmark_value'] = 'NULL'
+        end
+
+        it 'replaced benchmark type and benchmark value with "NULL"' do
+          expect(subject.validate_data(data)).to eq(valid_data)
+        end
+      end
+
+      context 'without benchmark_type and benchmark_value' do
+        before :example do
+          data['benchmark_type'] = nil
+          data['benchmark_value'] = nil
+          valid_data['benchmark_type'] = 'NULL'
+          valid_data['benchmark_value'] = 'NULL'
+        end
+
+        it 'replaced benchmark type and benchmark value with "NULL"' do
+          expect(subject.validate_data(data)).to eq(valid_data)
+        end
+      end
+
+      context 'with benchmark_value that is not a number' do
+        before :example do
+          data['benchmark_value'] = 'string'
+          valid_data['benchmark_type'] = 'NULL'
+          valid_data['benchmark_value'] = 'NULL'
+        end
+
+        it 'replaced benchmark type and benchmark value with "NULL"' do
+          expect(subject.validate_data(data)).to eq(valid_data)
+        end
+      end
+
     end
   end
 end

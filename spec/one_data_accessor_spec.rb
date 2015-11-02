@@ -431,4 +431,86 @@ describe OneDataAccessor do
       end
     end
   end
+
+  describe '.benchmark_map' do
+    before :example do
+      allow(OpenNebula::HostPool).to receive(:new) { host_pool }
+      allow(OpenNebula::Cluster).to receive(:new) { searched_cluster }
+      expect(host_pool).to receive(:info)
+    end
+
+    let(:host_pool) {
+      file = File.read("#{GEM_DIR}/mock/#{host_filename}")
+      xml = OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(file, 'HOST'))
+      host_pool = [ xml ]
+    }
+
+    let(:searched_cluster) {
+      file = File.read("#{GEM_DIR}/mock/#{cluster_filename}")
+      OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(file, 'CLUSTER'))
+    }
+
+    context 'with correct data on a host with one benchmark value' do
+      let(:host_filename) { 'one_data_accessor_host_01.xml' }
+      let(:expected) { { '1' => { :benchmark_type => 'bench_type_1',
+                                  :mixins => { 'mixin1' => '36.9' } } } }
+
+      it 'creates correct benchmark_map' do
+        expect(subject.benchmark_map).to eq(expected)
+      end
+    end
+
+    context 'with correct data on a host with two benchmark values' do
+      let(:host_filename) { 'one_data_accessor_host_02.xml' }
+      let(:expected) { { '2' => { :benchmark_type => 'bench_type_2',
+                                  :mixins => { 'mixin1' => '788.6', 'mixin2' => '123.123' } } } }
+
+      it 'creates correct benchmark_map' do
+        expect(subject.benchmark_map).to eq(expected)
+      end
+    end
+
+    context 'with no data on a host and correct data on host\'s cluster' do
+      before :example do
+        expect(searched_cluster).to receive(:info)
+      end
+
+      let(:host_filename) { 'one_data_accessor_host_03.xml' }
+      let(:cluster_filename) { 'one_data_accessor_cluster_01.xml' }
+      let(:expected) { { '3' => { :benchmark_type => 'bench_type_cluster_1',
+                                  :mixins => { 'mixin1' => '21.7' } } } }
+
+      it 'creates correct benchmark_map' do
+        expect(subject.benchmark_map).to eq(expected)
+      end
+    end
+
+    context 'with no data on a host and with no data on host\'s cluster' do
+      before :example do
+        expect(searched_cluster).to receive(:info)
+      end
+
+      let(:host_filename) { 'one_data_accessor_host_04.xml' }
+      let(:cluster_filename) { 'one_data_accessor_cluster_02.xml' }
+      let(:expected) { { '4' => {} } }
+
+      it 'creates correct benchmark_map' do
+        expect(subject.benchmark_map).to eq(expected)
+      end
+    end
+
+    context 'with no data on a host and without host\'s cluster' do
+      before :example do
+        expect(searched_cluster).to receive(:info)
+      end
+
+      let(:host_filename) { 'one_data_accessor_host_05.xml' }
+      let(:expected) { { '5' => {} } }
+      let(:searched_cluster) { nil }
+
+      it 'creates correct benchmark_map' do
+        expect(subject.benchmark_map).to eq(expected)
+      end
+    end
+  end
 end
