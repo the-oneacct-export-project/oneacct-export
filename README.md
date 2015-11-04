@@ -165,9 +165,17 @@ Usage oneacct-export [options]
 ##Continuous integration
 [Continuous integration for OneacctExport by Travis-CI](http://travis-ci.org/EGI-FCTF/oneacct_export/)
 
-## Contributing
+##Development
+###Contributing
 1. Fork it ( https://github.com/EGI-FCTF/oneacct_export/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
+
+###Debugging
+To change the log level of `oneacct-export` and `sidekiq` you have to set the environment variable **ONEACCT_EXPORT_LOG_LEVEL** to log level you need. Supported log levels are `DEBUG`, `INFO`, `WARN` and `ERROR`.
+```bash
+export ONEACCT_EXPORT_LOG_LEVEL=DEBUG
+```
+
