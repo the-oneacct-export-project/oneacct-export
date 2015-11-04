@@ -62,7 +62,7 @@ module DataValidators
       valid_data['start_time'] = Time.at(start_time)
       fail_validation 'EndTime' unless number?(data['end_time'])
       end_time = data['end_time'].to_i
-      valid_data['end_time'] = end_time == 0 ? 'NULL' : Time.at(end_time)
+      valid_data['end_time'] = end_time == 0 ? DEFAULT_VALUE : Time.at(end_time)
       fail_validation 'EndTime' if end_time != 0 && valid_data['start_time'] > valid_data['end_time']
 
       valid_data['machine_name'] = default(data['machine_name'], :string, "one-#{valid_data['vm_uuid']}")
@@ -77,13 +77,13 @@ module DataValidators
         status = status.to_i
         fail_validation 'Status' unless status.to_s == data['status_code'] && status < STATES.size && status >= 0
       end
-      valid_data['status'] = status ? STATES[status] : 'NULL'
+      valid_data['status'] = status ? STATES[status] : DEFAULT_VALUE
 
       fail_validation 'HISTORY_RECORDS' if (!data['history']) || data['history'].empty?
 
       duration = sum_rstime(data['history'], valid_data['status'] == 'completed', valid_data['vm_uuid'])
       valid_data['duration'] = Time.at(duration)
-      valid_data['suspend'] = end_time == 0 ? 'NULL' : (end_time - start_time) - duration
+      valid_data['suspend'] = end_time == 0 ? DEFAULT_VALUE : (end_time - start_time) - duration
       valid_data['cpu_count'] = default(data['cpu_count'], :nzn, '1')
 
       valid_data['network_inbound'] = (default(data['network_inbound'], :number, 0).to_i / B_IN_GB).round
@@ -92,7 +92,7 @@ module DataValidators
       valid_data['memory'] = default(data['memory'], :number, '0')
       valid_data['image_name'] = default(data['image_name'], :string, DEFAULT_VALUE)
       disk_size_sum = sum_disk_size(data['disks'], valid_data['vm_uuid'])
-      valid_data['disk_size'] = disk_size_sum ? disk_size_sum : 'NULL'
+      valid_data['disk_size'] = disk_size_sum ? disk_size_sum : DEFAULT_VALUE
 
       valid_data['cloud_compute_service'] = default(data['cloud_compute_service'], :string, DEFAULT_VALUE)
 
