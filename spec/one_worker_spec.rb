@@ -198,6 +198,8 @@ describe OneWorker do
       data['benchmark_type'] = nil
       data['benchmark_value'] = nil
 
+      data['oneacct_export_version'] = ::OneacctExporter::VERSION
+
       data
     end
 

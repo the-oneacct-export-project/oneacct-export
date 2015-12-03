@@ -6,6 +6,7 @@ require 'one_data_accessor'
 require 'one_writer'
 require 'sidekiq_conf'
 require 'oneacct_exporter/log'
+require 'oneacct_exporter/version'
 require 'settings'
 require 'data_validators/apel_data_validator'
 require 'data_validators/pbs_data_validator'
@@ -24,6 +25,14 @@ class OneWorker
                   queue: (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'].to_sym : :default
 
   IGNORED_NETWORKS=["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"].map {|x| IPAddr.new x}
+
+  # Prepare data that are common for all the output types
+  def common_data
+    data = {}
+    data['oneacct_export_version'] = ::OneacctExporter::VERSION
+
+    data
+  end
 
   # Prepare data that are specific for output type and common for every virtual machine
   def output_type_specific_data
@@ -90,7 +99,8 @@ class OneWorker
   #
   # @return [Hash] required data from virtual machine
   def process_vm(vm, user_map, image_map, benchmark_map)
-    data = output_type_specific_data
+    data = common_data
+    data.merge! output_type_specific_data
 
     data['vm_uuid'] = vm['ID']
     data['start_time'] = vm['STIME']

@@ -27,7 +27,7 @@ Memory: <%= vm['memory']%>
 Disk: <%= vm['disk_size'].to_i != 0 ? (vm['disk_size']/1000.0).ceil : vm['disk_size']%>
 StorageRecordId: NULL
 ImageId: <%= vm['image_name']%>
-CloudType: <%= vm['cloud_type']%>
+CloudType: <%= vm['cloud_type']%> oneacct-export/<%= vm['oneacct_export_version']%>
 BenchmarkType: <%= vm['benchmark_type']%>
 Benchmark: <%= vm['benchmark_value']%>
 %%
