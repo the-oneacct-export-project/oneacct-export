@@ -143,21 +143,21 @@ class OneacctOpts
   end
 
   def self.check_output_type_specific_settings
-    if Settings.output['output_type'] == APEL_OT
+    if APEL_OT.include?(Settings.output['output_type'])
       unless Settings.output['apel'] && Settings.output.apel['site_name'] &&
           Settings.output.apel['cloud_type'] && Settings.output.apel['endpoint']
         fail ArgumentError, 'Missing some mandatory parameters for APEL output type. Check your configuration file.'
       end
     end
 
-    if Settings.output['output_type'] == PBS_OT && Settings.output['pbs']
+    if PBS_OT.include?(Settings.output['output_type']) && Settings.output['pbs']
       Settings.output.pbs['realm'] ||= 'META'
       Settings.output.pbs['queue'] ||= 'cloud'
       Settings.output.pbs['scratch_type'] ||= 'local'
       Settings.output.pbs['host_identifier'] ||= 'on_localhost'
     end
 
-    if Settings.output['output_type'] == LOGSTASH_OT
+    if LOGSTASH_OT.include?(Settings.output['output_type'])
       unless Settings.output['logstash'] && Settings.output.logstash['host'] && Settings.output.logstash['port']
         fail ArgumentError, 'Missing some mandatory parameters for logstash output type. Check your configuration file.'
       end

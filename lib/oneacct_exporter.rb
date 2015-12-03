@@ -33,19 +33,17 @@ class OneacctExporter
     clean_output_dir
 
     new_file_number = 1
-    batch_number = 0
     oda = OneDataAccessor.new(@compatibility, @log)
 
     vms = []
     # load records of virtual machines in batches
-    while vms = oda.vms(batch_number, @range, @groups)
-      @log.info("Starting worker with batch number: #{batch_number}.")
+    while vms = oda.vms(@range, @groups)
       unless vms.empty?
+        @log.info("Starting worker with next batch.")
         # add a new job for every batch to the Sidekiq's queue
         OneWorker.perform_async(vms.join('|'), new_file_number)
         new_file_number += 1
       end
-      batch_number += 1
     end
 
     @log.info('No more records to read.')
@@ -56,7 +54,7 @@ class OneacctExporter
   rescue Errors::AuthenticationError, Errors::UserNotAuthorizedError,\
          Errors::ResourceNotFoundError, Errors::ResourceStateError,\
          Errors::ResourceRetrievalError => e
-    @log.error("Virtual machine retrieval for batch number #{batch_number} "\
+    @log.error("Virtual machine retrieval "\
                "failed with error: #{e.message}. Exiting.")
   end
 

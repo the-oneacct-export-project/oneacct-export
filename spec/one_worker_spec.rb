@@ -13,9 +13,10 @@ describe OneWorker do
         Settings.output.apel['endpoint'] = 'machine.hogwarts.co.uk'
         Settings.output.apel['site_name'] = 'Hogwarts'
         Settings.output.apel['cloud_type'] = 'OpenNebula'
+        Settings.output.apel['cloud_compute_service'] = 'CloudComputeServiceValue'
       end
 
-      let(:output_type_specific_data) { {'endpoint' => 'machine.hogwarts.co.uk', 'site_name' => 'Hogwarts', 'cloud_type' => 'OpenNebula'} }
+      let(:output_type_specific_data) { {'endpoint' => 'machine.hogwarts.co.uk', 'site_name' => 'Hogwarts', 'cloud_type' => 'OpenNebula', 'cloud_compute_service' => 'CloudComputeServiceValue'} }
 
       it 'returns data specific for apel output type in form of hash' do
         expect(subject.output_type_specific_data).to eq(output_type_specific_data)
@@ -138,6 +139,7 @@ describe OneWorker do
       Settings.output.apel['endpoint'] = 'machine.hogwarts.co.uk'
       Settings.output.apel['site_name'] = 'Hogwarts'
       Settings.output.apel['cloud_type'] = 'OpenNebula'
+      Settings.output.apel['cloud_compute_service'] = nil
 
       allow(vm).to receive(:state_str) { 'DONE' }
     end
@@ -153,6 +155,7 @@ describe OneWorker do
       data['endpoint'] = 'machine.hogwarts.co.uk'
       data['site_name'] = 'Hogwarts'
       data['cloud_type'] = 'OpenNebula'
+      data['cloud_compute_service'] = nil
 
       data['vm_uuid'] = '36551'
       data['start_time'] = '1383741160'
@@ -168,6 +171,7 @@ describe OneWorker do
       data['network_inbound'] = '43557888'
       data['network_outbound'] = '376832'
       data['memory'] = '1736960'
+      data['number_of_public_ips'] = 1
       history = []
       rec = {}
       rec['start_time'] = '1383741169'
@@ -191,17 +195,23 @@ describe OneWorker do
       data['user_dn'] = '/Dn=FrOm/CN=DN/CN=TeMpLaTe'
       data['image_name'] = 'https://appdb.egi.eu/store/vo/image/image_name_from_VMCATCHER_EVENT_AD_MPURI_tag/'
 
+      data['benchmark_type'] = nil
+      data['benchmark_value'] = nil
+
+      data['oneacct_export_version'] = ::OneacctExporter::VERSION
+
       data
     end
 
     let(:user_map) { {'120' => '/Dn=FrOm/CN=DN/CN=MaP'} }
     let(:image_map) { {'31' => 'image_name_from_map'} }
+    let(:benchmark_map) { {'123' => nil}  }
 
     context 'with apel specific data' do
       let(:filename) { 'one_worker_vm_dn01.xml' }
 
       it 'returns correct vm data with apel specific data' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -221,12 +231,13 @@ describe OneWorker do
         data.delete 'endpoint'
         data.delete 'site_name'
         data.delete 'cloud_type'
+        data.delete 'cloud_compute_service'
       end
 
       let(:filename) { 'one_worker_vm_dn01.xml' }
 
       it 'returns correct vm data with pbs specific data' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -234,7 +245,7 @@ describe OneWorker do
       let(:filename) { 'one_worker_vm_dn01.xml' }
 
       it 'returns correct vm data with user\'s dn from template' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -246,7 +257,7 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with user\'s dn from map' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -254,7 +265,7 @@ describe OneWorker do
       let(:filename) { 'one_worker_vm_image_name01.xml' }
 
       it 'returns correct vm data with image name from VMCATCHER_EVENT_AD_MPURI tag' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -266,7 +277,7 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with image name from map' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -279,7 +290,7 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with image name from USER_TEMPLATE/OCCI_COMPUTE_MIXINS tag' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -292,7 +303,7 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with image name from USER_TEMPLATE/OCCI_MIXIN tag' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -305,7 +316,7 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with image name from TEMPLATE/OCCI_MIXIN tag' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -317,7 +328,7 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with image name as image id' do
-        expect(subject.process_vm(vm, user_map, image_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
       end
     end
   end
@@ -402,19 +413,45 @@ describe OneWorker do
     end
   end
 
+  describe ".number_of_public_ips" do
+    let(:vm) do
+      xml = File.read("#{GEM_DIR}/mock/#{filename}")
+      OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))
+    end
+
+    context "with multiple NICs (multiple IPs with duplicates) " do
+      let(:filename) { 'one_worker_vm_number_of_public_ips_01.xml' }
+      it "returns the correct number of public IPs" do
+        expect(subject.number_of_public_ips(vm)).to eq 8
+      end
+    end
+    context "with no NICs" do
+      let(:filename) { 'one_worker_vm_number_of_public_ips_02.xml' }
+      it "returns 0, the correct number of IPs" do
+        expect(subject.number_of_public_ips(vm)).to eq 0
+      end
+    end
+    context "with single NIC (multiple IPs with duplicates)" do
+      let(:filename) { 'one_worker_vm_number_of_public_ips_03.xml' }
+      it "returns the correct number of public IPs" do
+        expect(subject.number_of_public_ips(vm)).to eq 8
+      end
+    end
+  end
+
   describe '.perform' do
     before :example do
       Settings.output['output_type'] = 'unknown'
       allow(OneDataAccessor).to receive(:new) { oda }
       allow(subject).to receive(:create_user_map) { 'user_map' }
       allow(subject).to receive(:create_image_map) { 'image_map' }
-      allow(subject).to receive(:load_vm).and_return(:default)
+      allow(oda).to receive(:benchmark_map) { 'benchmark_map' }
       allow(subject).to receive(:load_vm).with('10', oda).and_return('10')
       allow(subject).to receive(:load_vm).with('20', oda).and_return('20')
       allow(subject).to receive(:load_vm).with('30', oda).and_return('30')
-      allow(subject).to receive(:process_vm).with('10', anything, anything).and_return('data_vm1')
-      allow(subject).to receive(:process_vm).with('20', anything, anything).and_return('data_vm2')
-      allow(subject).to receive(:process_vm).with('30', anything, anything).and_return('data_vm3')
+      allow(subject).to receive(:process_vm).with('10', anything, anything, anything).and_return('data_vm1')
+      allow(subject).to receive(:process_vm).with('20', anything, anything, anything).and_return('data_vm2')
+      allow(subject).to receive(:process_vm).with('30', anything, anything, anything).and_return('data_vm3')
     end
 
     let(:vms) { '10|20|30' }
@@ -498,4 +535,49 @@ describe OneWorker do
       end
     end
   end
+
+  describe '.search_benchmark' do
+    let(:vm) do
+      xml = File.read("#{GEM_DIR}/mock/#{filename}")
+      OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))
+    end
+
+    let(:benchmark_map) do
+      values1 = { :benchmark_type => 'bench_type_1', :mixins => { 'mixin1' => '34.12' } }
+      values2 = { :benchmark_type => 'bench_type_2', :mixins => { 'mixin2' => '123.2', 'mixin3' => '129.6' } }
+      values3 = { }
+
+      benchmark_map = { '19' => values1, '11' => values2, '23' => values3 }
+      benchmark_map
+    end
+
+    context 'with empty benchmark_map' do
+      let(:filename) { 'one_worker_vm_search_benchmark_01.xml' }
+      let(:benchmark_map) { {} }
+      let(:expected) { { :benchmark_type => nil, :benchmark_value => nil } }
+
+      it 'returns array with two nil items' do
+        expect(subject.search_benchmark(vm, benchmark_map)).to eq(expected)
+      end
+    end
+
+    context 'with no data for the virtual machine in benchmark_map' do
+      let(:filename) { 'one_worker_vm_search_benchmark_02.xml' }
+      let(:expected) { { :benchmark_type => nil, :benchmark_value => nil } }
+
+      it 'returns array with two nil items' do
+        expect(subject.search_benchmark(vm, benchmark_map)).to eq(expected)
+      end
+    end
+
+    context 'with correct data in vm and benchmark_map' do
+      let(:filename) { 'one_worker_vm_search_benchmark_01.xml' }
+      let(:expected) { { :benchmark_type => 'bench_type_2', :benchmark_value => '129.6' } }
+
+      it 'returns correct benchmark type and value' do
+        expect(subject.search_benchmark(vm, benchmark_map)).to eq(expected)
+      end
+    end
+  end
+
 end

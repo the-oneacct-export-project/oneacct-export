@@ -42,10 +42,7 @@ describe OneacctExporter do
 
     context 'with increasing batch number' do
       before :example do
-        expect(oda).to receive(:vms).with(0, nil, nil).ordered { [1, 2, 3] }
-        expect(oda).to receive(:vms).with(1, nil, nil).ordered { [4, 5, 6] }
-        expect(oda).to receive(:vms).with(2, nil, nil).ordered { [7, 8, 9] }
-        expect(oda).to receive(:vms).with(3, nil, nil).ordered { nil }
+        expect(oda).to receive(:vms).exactly(4).times.and_return([1, 2, 3], [4, 5, 6], [7, 8, 9], nil)
       end
 
       it 'will always finish when there are no more vms to process' do
@@ -56,10 +53,7 @@ describe OneacctExporter do
     context 'with non-empty batches of vms' do
       before :example do
         Sidekiq::Worker.clear_all
-        allow(oda).to receive(:vms).with(0, nil, nil).ordered { [1, 2, 3] }
-        allow(oda).to receive(:vms).with(1, nil, nil).ordered { [4, 5, 6] }
-        allow(oda).to receive(:vms).with(2, nil, nil).ordered { [7, 8, 9] }
-        allow(oda).to receive(:vms).with(3, nil, nil).ordered { nil }
+        allow(oda).to receive(:vms).exactly(4).times.and_return([1, 2, 3], [4, 5, 6], [7, 8, 9], nil)
       end
 
       after :example do
@@ -82,11 +76,7 @@ describe OneacctExporter do
     context 'with some empty batches of vms' do
       before :example do
         Sidekiq::Worker.clear_all
-        allow(oda).to receive(:vms).with(0, nil, nil).ordered { [1, 2, 3] }
-        allow(oda).to receive(:vms).with(1, nil, nil).ordered { [] }
-        allow(oda).to receive(:vms).with(2, nil, nil).ordered { [7, 8, 9] }
-        allow(oda).to receive(:vms).with(3, nil, nil).ordered { [] }
-        allow(oda).to receive(:vms).with(4, nil, nil).ordered { nil }
+        allow(oda).to receive(:vms).exactly(5).times.and_return([1, 2, 3], [], [7, 8, 9], [], nil)
       end
 
       after :example do

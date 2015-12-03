@@ -155,42 +155,44 @@ describe OneDataAccessor do
     before :example do
       allow(vm_pool).to receive(:info) { 'valid_rc' }
       allow(vm_pool).to receive(:to) { vm_pool }
+      allow(vm_pool).to receive(:count) { 100 }
+      allow(vm_pool).to receive(:entries) { [last] }
       allow(OpenNebula::VirtualMachinePool).to receive(:new) { vm_pool }
     end
 
     let(:vm_pool) { double('vm_pool') }
+    let(:last) { double('last') }
 
     context 'without compatibility mode' do
-      context 'with valid batch number' do
-        it 'requests vms with correct range' do
-          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 0, 99, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-          subject.load_vm_pool(0)
+      it 'requests vms with correct range' do
+        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 0, -100, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+        allow(last).to receive(:id) {99}
+        subject.load_vm_pool
 
-          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 100, 199, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-          subject.load_vm_pool(1)
+        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 100, -100, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+        allow(last).to receive(:id) {199}
+        subject.load_vm_pool
 
-          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 300, 399, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-          subject.load_vm_pool(3)
+        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 200, -100, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+        allow(last).to receive(:id) {299}
+        subject.load_vm_pool
 
-          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 500, 599, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-          subject.load_vm_pool(5)
+        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 300, -100, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+        allow(last).to receive(:id) {399}
+        subject.load_vm_pool
 
-          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 1000, 1099, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-          subject.load_vm_pool(10)
+        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 400, -100, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+        allow(last).to receive(:id) {499}
+        subject.load_vm_pool
 
-          expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 1200, 1299, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-          subject.load_vm_pool(12)
-        end
-
-        it 'returns obtained vm pool' do
-          expect(subject.load_vm_pool(0)).to eq(vm_pool)
-        end
+        expect(vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, 500, -100, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+        allow(last).to receive(:id) {599}
+        subject.load_vm_pool
       end
 
-      context 'with invalid batch number' do
-        it 'fails with ArgumentError' do
-          expect { subject.load_vm_pool('invalid_number') }.to raise_error(ArgumentError)
-        end
+      it 'returns obtained vm pool' do
+        allow(last).to receive(:id) {99}
+        expect(subject.load_vm_pool).to eq(vm_pool)
       end
     end
 
@@ -199,17 +201,19 @@ describe OneDataAccessor do
         Settings.output['num_of_vms_per_file'] = 3
         allow(OpenNebula::VirtualMachinePool).to receive(:new) { compatibility_vm_pool }
         allow(compatibility_vm_pool).to receive(:info) { 'valid_rc' }
+        allow(last).to receive(:id).and_return(2, 5, 8, 10)
       end
 
       let(:one_data_accessor) { OneDataAccessor.new(true, Logger.new('/dev/null')) }
-      let(:compatibility_vm_pool) { [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }
+      let(:compatibility_vm_pool) { [0, 1, last, 3, 4, last, 6, 7, last, 9, last] }
+      let(:last) { double('last') }
 
       it 'returns correct parts of vm pool' do
         expect(compatibility_vm_pool).to receive(:info).with(OpenNebula::Pool::INFO_ALL, -1, -1, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
-        expect(subject.load_vm_pool(0)).to eq([0, 1, 2])
-        expect(subject.load_vm_pool(1)).to eq([3, 4, 5])
-        expect(subject.load_vm_pool(2)).to eq([6, 7, 8])
-        expect(subject.load_vm_pool(3)).to eq([9, 10])
+        expect(subject.load_vm_pool).to eq([0, 1, last])
+        expect(subject.load_vm_pool).to eq([3, 4, last])
+        expect(subject.load_vm_pool).to eq([6, 7, last])
+        expect(subject.load_vm_pool).to eq([9, last])
       end
     end
   end
@@ -333,23 +337,12 @@ describe OneDataAccessor do
     let(:vm2) { { 'ID' => '2' } }
     let(:vm3) { { 'ID' => '3' } }
     let(:vm_pool) { [vm1, vm2, vm3] }
-    let(:batch_number) { 5 }
-
-    context 'is called with some batch number' do
-      before :example do
-        expect(subject).to receive(:load_vm_pool).with(5) { vm_pool }
-      end
-
-      it 'calls load_vm_pool with that batch number' do
-        subject.vms(batch_number, nil, nil)
-      end
-    end
 
     context 'when vm pool is empty' do
       let(:vm_pool) { [] }
 
       it 'returns nil' do
-        expect(subject.vms(batch_number, nil, nil)).to be_nil
+        expect(subject.vms(nil, nil)).to be_nil
       end
     end
 
@@ -360,14 +353,14 @@ describe OneDataAccessor do
         expect(subject).to receive(:want?).with(vm3, nil, nil).once
       end
       it 'calls want?' do
-        subject.vms(batch_number, nil, nil)
+        subject.vms(nil, nil)
       end
     end
 
     context 'for every vm obtained from vm pool' do
       context 'with ID attribute' do
         it 'returns ID of those vms' do
-          expect(subject.vms(batch_number, nil, nil)).to eq([1, 2, 3])
+          expect(subject.vms(nil, nil)).to eq([1, 2, 3])
         end
       end
 
@@ -376,7 +369,7 @@ describe OneDataAccessor do
         let(:vm3) { {} }
 
         it 'skips vms without ID attribute and returns only thouse with it' do
-          expect(subject.vms(batch_number, nil, nil)).to eq([2])
+          expect(subject.vms(nil, nil)).to eq([2])
         end
       end
     end
@@ -435,6 +428,88 @@ describe OneDataAccessor do
         it 'creates a mapping of item\'s ID and its element according to xpath, skipping items without ID' do
           expect(subject.mapping(pool_class, xpath)).to eq(result)
         end
+      end
+    end
+  end
+
+  describe '.benchmark_map' do
+    before :example do
+      allow(OpenNebula::HostPool).to receive(:new) { host_pool }
+      allow(OpenNebula::Cluster).to receive(:new) { searched_cluster }
+      expect(host_pool).to receive(:info)
+    end
+
+    let(:host_pool) {
+      file = File.read("#{GEM_DIR}/mock/#{host_filename}")
+      xml = OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(file, 'HOST'))
+      host_pool = [ xml ]
+    }
+
+    let(:searched_cluster) {
+      file = File.read("#{GEM_DIR}/mock/#{cluster_filename}")
+      OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(file, 'CLUSTER'))
+    }
+
+    context 'with correct data on a host with one benchmark value' do
+      let(:host_filename) { 'one_data_accessor_host_01.xml' }
+      let(:expected) { { '1' => { :benchmark_type => 'bench_type_1',
+                                  :mixins => { 'mixin1' => '36.9' } } } }
+
+      it 'creates correct benchmark_map' do
+        expect(subject.benchmark_map).to eq(expected)
+      end
+    end
+
+    context 'with correct data on a host with two benchmark values' do
+      let(:host_filename) { 'one_data_accessor_host_02.xml' }
+      let(:expected) { { '2' => { :benchmark_type => 'bench_type_2',
+                                  :mixins => { 'mixin1' => '788.6', 'mixin2' => '123.123' } } } }
+
+      it 'creates correct benchmark_map' do
+        expect(subject.benchmark_map).to eq(expected)
+      end
+    end
+
+    context 'with no data on a host and correct data on host\'s cluster' do
+      before :example do
+        expect(searched_cluster).to receive(:info)
+      end
+
+      let(:host_filename) { 'one_data_accessor_host_03.xml' }
+      let(:cluster_filename) { 'one_data_accessor_cluster_01.xml' }
+      let(:expected) { { '3' => { :benchmark_type => 'bench_type_cluster_1',
+                                  :mixins => { 'mixin1' => '21.7' } } } }
+
+      it 'creates correct benchmark_map' do
+        expect(subject.benchmark_map).to eq(expected)
+      end
+    end
+
+    context 'with no data on a host and with no data on host\'s cluster' do
+      before :example do
+        expect(searched_cluster).to receive(:info)
+      end
+
+      let(:host_filename) { 'one_data_accessor_host_04.xml' }
+      let(:cluster_filename) { 'one_data_accessor_cluster_02.xml' }
+      let(:expected) { { '4' => {} } }
+
+      it 'creates correct benchmark_map' do
+        expect(subject.benchmark_map).to eq(expected)
+      end
+    end
+
+    context 'with no data on a host and without host\'s cluster' do
+      before :example do
+        expect(searched_cluster).to receive(:info)
+      end
+
+      let(:host_filename) { 'one_data_accessor_host_05.xml' }
+      let(:expected) { { '5' => {} } }
+      let(:searched_cluster) { nil }
+
+      it 'creates correct benchmark_map' do
+        expect(subject.benchmark_map).to eq(expected)
       end
     end
   end

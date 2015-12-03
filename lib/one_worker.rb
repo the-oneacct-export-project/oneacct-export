@@ -6,12 +6,14 @@ require 'one_data_accessor'
 require 'one_writer'
 require 'sidekiq_conf'
 require 'oneacct_exporter/log'
+require 'oneacct_exporter/version'
 require 'settings'
 require 'data_validators/apel_data_validator'
 require 'data_validators/pbs_data_validator'
 require 'data_validators/logstash_data_validator'
 require 'output_types'
 require 'errors'
+require 'ipaddr'
 
 # Sidekiq worker class
 class OneWorker
@@ -22,23 +24,34 @@ class OneWorker
   sidekiq_options retry: 5, dead: false, \
                   queue: (Settings['sidekiq'] && Settings.sidekiq['queue']) ? Settings.sidekiq['queue'].to_sym : :default
 
+  IGNORED_NETWORKS=["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"].map {|x| IPAddr.new x}
+
+  # Prepare data that are common for all the output types
+  def common_data
+    data = {}
+    data['oneacct_export_version'] = ::OneacctExporter::VERSION
+
+    data
+  end
+
   # Prepare data that are specific for output type and common for every virtual machine
   def output_type_specific_data
     data = {}
-    if Settings.output['output_type'] == PBS_OT && Settings.output['pbs']
+    if PBS_OT.include?(Settings.output['output_type']) && Settings.output['pbs']
       data['realm'] = Settings.output.pbs['realm']
       data['pbs_queue'] = Settings.output.pbs['queue']
       data['scratch_type'] = Settings.output.pbs['scratch_type']
       data['host'] = Settings.output.pbs['host_identifier']
     end
 
-    if Settings.output['output_type'] == APEL_OT
+    if APEL_OT.include?(Settings.output['output_type'])
       data['endpoint'] = Settings.output.apel['endpoint'].chomp('/')
       data['site_name'] = Settings.output.apel['site_name']
       data['cloud_type'] = Settings.output.apel['cloud_type']
+      data['cloud_compute_service'] = Settings.output.apel['cloud_compute_service']
     end
 
-    if Settings.output['output_type'] == LOGSTASH_OT
+    if LOGSTASH_OT.include?(Settings.output['output_type'])
       data['host'] = Settings.output.logstash['host']
       data['port'] = Settings.output.logstash['port']
     end
@@ -85,8 +98,9 @@ class OneWorker
   # Obtain and parse required data from vm
   #
   # @return [Hash] required data from virtual machine
-  def process_vm(vm, user_map, image_map)
-    data = output_type_specific_data
+  def process_vm(vm, user_map, image_map, benchmark_map)
+    data = common_data
+    data.merge! output_type_specific_data
 
     data['vm_uuid'] = vm['ID']
     data['start_time'] = vm['STIME']
@@ -110,6 +124,11 @@ class OneWorker
     data['image_name'] ||= vm['TEMPLATE/DISK[1]/IMAGE_ID']
     data['history'] = history_records(vm)
     data['disks'] = disk_records(vm)
+    data['number_of_public_ips'] = number_of_public_ips(vm)
+
+    benchmark = search_benchmark(vm, benchmark_map)
+    data['benchmark_type'] = benchmark[:benchmark_type]
+    data['benchmark_value'] = benchmark[:benchmark_value]
 
     data
   end
@@ -153,7 +172,23 @@ class OneWorker
     disks
   end
 
-  # Look for 'os_tpl' OCCI mixin to better identifie virtual machine's image
+  # Returns number of unique public ip addresses of vm
+  #
+  # @param [OpenNebula::VirtualMachine] vm virtual machine
+  #
+  # @return [Integer] number of unique public ip addresses represented by integer
+  def number_of_public_ips(vm)
+    all_ips = []
+    vm.each 'TEMPLATE/NIC' do |nic|
+      nic.each 'IP' do |ip|
+        all_ips << ip.text if ip_public?(ip)
+      end
+    end
+
+    all_ips.uniq.length
+  end
+
+  # Look for 'os_tpl' OCCI mixin to better identify virtual machine's image
   #
   # @param [OpenNebula::VirtualMachine] vm virtual machine
   #
@@ -185,6 +220,7 @@ class OneWorker
     oda = OneDataAccessor.new(false, logger)
     user_map = create_user_map(oda)
     image_map = create_image_map(oda)
+    benchmark_map = oda.benchmark_map
 
     data = []
 
@@ -194,11 +230,11 @@ class OneWorker
 
       begin
         logger.debug("Processing vm with id: #{vm_id}.")
-        vm_data = process_vm(vm, user_map, image_map)
+        vm_data = process_vm(vm, user_map, image_map, benchmark_map)
 
-        validator = DataValidators::ApelDataValidator.new(logger) if Settings.output['output_type'] == APEL_OT
-        validator = DataValidators::PbsDataValidator.new(logger) if Settings.output['output_type'] == PBS_OT
-        validator = DataValidators::LogstashDataValidator.new(logger) if Settings.output['output_type'] == LOGSTASH_OT
+        validator = DataValidators::ApelDataValidator.new(logger) if APEL_OT.include?(Settings.output['output_type'])
+        validator = DataValidators::PbsDataValidator.new(logger) if PBS_OT.include?(Settings.output['output_type'])
+        validator = DataValidators::LogstashDataValidator.new(logger) if LOGSTASH_OT.include?(Settings.output['output_type'])
 
         vm_data = validator.validate_data(vm_data) if validator
       rescue Errors::ValidationError => e
@@ -225,5 +261,39 @@ class OneWorker
     msg = "Cannot write result: #{e.message}"
     logger.error(msg)
     raise msg
+  end
+
+  # Search benchmark type and value virtual machine.
+  #
+  # @param [OpenNebula::VirtualMachine] vm virtual machine
+  # @param [Hash] benchmark_map map of all hosts' benchmarks
+  #
+  # @return [Hash] benchmark type and value or both can be nil
+  def search_benchmark(vm, benchmark_map)
+    nil_benchmark = { :benchmark_type => nil, :benchmark_value => nil }
+    map = benchmark_map[vm['HISTORY_RECORDS/HISTORY[last()]/HID']]
+    return nil_benchmark unless map
+    return nil_benchmark unless vm['USER_TEMPLATE/OCCI_COMPUTE_MIXINS']
+
+    occi_compute_mixins = vm['USER_TEMPLATE/OCCI_COMPUTE_MIXINS'].split(/\s+/)
+    occi_compute_mixins.each do |mixin|
+      return { :benchmark_type => map[:benchmark_type], :benchmark_value => map[:mixins][mixin] } if map[:mixins].has_key?(mixin)
+    end
+    nil_benchmark
+  end
+
+  private
+
+  # Check if IP is public
+  #
+  # @param [String] ip address
+  #
+  # @return [Bool] true or false
+  def ip_public?(ip)
+    ip_obj = IPAddr.new(ip.text)
+    IGNORED_NETWORKS.each do |net|
+      return false if net.include? ip_obj
+    end
+    true
   end
 end

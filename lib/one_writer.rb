@@ -3,6 +3,7 @@ require 'tempfile'
 require 'fileutils'
 require 'settings'
 require 'logger'
+require 'output_types'
 
 # Class responsible for writing data into files in specific format
 #
@@ -10,6 +11,7 @@ require 'logger'
 # @attr_reader [String] output path to the output file
 # @attr_reader [any logger] logger
 class OneWriter
+  include OutputTypes
   APEL_FILENAME_FORMAT = '%014d'
 
   attr_reader :data, :output, :log
@@ -25,7 +27,7 @@ class OneWriter
     @log = log
 
     filename = file_number.to_s
-    filename = APEL_FILENAME_FORMAT % file_number if output_type == 'apel-0.2'
+    filename = APEL_FILENAME_FORMAT % file_number if APEL_OT.include?(output_type)
     @output = "#{Settings.output['output_dir']}/#{filename}"
   end
 

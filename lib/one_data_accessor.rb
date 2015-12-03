@@ -18,6 +18,7 @@ class OneDataAccessor
   STATE_DONE = '6'
 
   attr_reader :log, :batch_size, :client, :compatibility
+  attr_accessor :start_vm_id
 
   def initialize(compatibility, log = nil)
     @log = log ? log : Logger.new(STDOUT)
@@ -27,6 +28,7 @@ class OneDataAccessor
     fail ArgumentError, 'Wrong number of vms per file.' unless number?(@batch_size)
 
     @compatibility_vm_pool = nil
+    @start_vm_id = 0
 
     initialize_client
   end
@@ -87,15 +89,14 @@ class OneDataAccessor
 
   # Retriev IDs of specified virtual machines
   #
-  # @param [Integer] batch_number
   # @param [Hash] range date range into which virtual machine has to belong
   # @param [Hash] groups groups into one of which owner of the virtual machine has to belong
   #
   # @return [Array] array with virtual machines' IDs
-  def vms(batch_number, range, groups)
+  def vms(range, groups)
     vms = []
     # load specific batch
-    vm_pool = load_vm_pool(batch_number)
+    vm_pool = load_vm_pool
     return nil if vm_pool.count == 0
 
     @log.debug("Searching for vms based on range: #{range} and groups: #{groups}.")
@@ -145,11 +146,11 @@ class OneDataAccessor
   # Load part of virtual machine pool
   #
   # @param [Integer] batch_number
-  def load_vm_pool(batch_number)
-    fail ArgumentError, "#{batch_number} is not a valid number" unless number?(batch_number)
-    @log.debug("Loading vm pool with batch number: #{batch_number}.")
-    from = batch_number * @batch_size
-    to = (batch_number + 1) * @batch_size - 1
+  def load_vm_pool
+    @log.debug("Loading vm pool from id: #{start_vm_id}.")
+    from = @start_vm_id
+    how_many = @batch_size
+    to = from + how_many - 1
 
     # if in compatibility mode, whole virtual machine pool has to be loaded for the first time
     if @compatibility
@@ -160,11 +161,16 @@ class OneDataAccessor
         @compatibility_vm_pool = vm_pool.to_a
       end
 
-      return @compatibility_vm_pool[from..to] || []
+      pool = @compatibility_vm_pool[from..to] || []
+      @start_vm_id = pool.last.id + 1 unless pool.empty?
+
+      return pool
     else
       vm_pool = OpenNebula::VirtualMachinePool.new(@client)
-      rc = vm_pool.info(OpenNebula::Pool::INFO_ALL, from, to, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
+      rc = vm_pool.info(OpenNebula::Pool::INFO_ALL, from, -how_many, OpenNebula::VirtualMachinePool::INFO_ALL_VM)
       check_retval(rc, Errors::ResourceRetrievalError)
+
+      @start_vm_id = vm_pool.entries.last.id + 1 unless vm_pool.count == 0
 
       return vm_pool
     end
@@ -185,5 +191,50 @@ class OneDataAccessor
     else
       fail e_klass, rc.message
     end
+  end
+
+  # Check all hosts and gain benchmark name and value.
+  #
+  # @return [Hash] hosts' IDs and hash with benchmark name and value
+  def benchmark_map
+    host_pool = OpenNebula::HostPool.new(@client)
+    rc = host_pool.info
+    check_retval(rc, Errors::ResourceRetrievalError)
+
+    bench_map = {}
+
+    host_pool.each do |host|
+      structure = {}
+      benchmark_values = nil
+      benchmark_type = nil
+
+      if (benchmark_type = host['TEMPLATE/BENCHMARK_TYPE'])
+        benchmark_values = host['TEMPLATE/BENCHMARK_VALUES'].split(/\s*\n\s*/)
+      else
+        cluster_id = host['CLUSTER_ID'].to_i
+        searched_cluster = OpenNebula::Cluster.new(OpenNebula::Cluster.build_xml(cluster_id), @client)
+        rc = searched_cluster.info
+        check_retval(rc, Errors::ResourceRetrievalError)
+
+        if searched_cluster
+          if (benchmark_type = searched_cluster['TEMPLATE/BENCHMARK_TYPE'])
+            benchmark_values = searched_cluster['TEMPLATE/BENCHMARK_VALUES'].split(/\s*\n\s*/)
+          end
+        end
+      end
+
+      if benchmark_values
+        mixins = {}
+        benchmark_values.each do |value|
+          values = value.split(/\s+/, 2)
+          mixins[values[0]] = values[1]
+        end
+        structure = { :benchmark_type => benchmark_type, :mixins => mixins }
+      end
+
+      bench_map[host['ID']] = structure
+    end
+
+    bench_map
   end
 end

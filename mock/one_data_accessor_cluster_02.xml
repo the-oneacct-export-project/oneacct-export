@@ -1,0 +1,23 @@
+<CLUSTER>
+  <ID>2</ID>
+  <NAME>cluster-number-two</NAME>
+  <HOSTS>
+    <ID>4</ID>
+  </HOSTS>
+  <DATASTORES>
+    <ID>101</ID>
+    <ID>102</ID>
+    <ID>103</ID>
+  </DATASTORES>
+  <VNETS>
+    <ID>6</ID>
+    <ID>8</ID>
+    <ID>17</ID>
+    <ID>21</ID>
+    <ID>24</ID>
+  </VNETS>
+  <TEMPLATE>
+    <RESERVED_CPU><![CDATA[]]></RESERVED_CPU>
+    <RESERVED_MEM><![CDATA[8388608]]></RESERVED_MEM>
+  </TEMPLATE>
+</CLUSTER>
