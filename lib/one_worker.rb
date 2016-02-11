@@ -75,6 +75,11 @@ class OneWorker
     create_map(OpenNebula::ImagePool, 'TEMPLATE/VMCATCHER_EVENT_AD_MPURI', oda)
   end
 
+  def create_cluster_map(oda)
+    logger.debug('Creating cluster map.')
+    create_map(OpenNebula::ClusterPool, 'TEMPLATE/APEL_SITE_NAME', oda)
+  end
+
   # Generic method for mapping creation
   def create_map(pool_type, mapping, oda)
     oda.mapping(pool_type, mapping)
@@ -98,7 +103,7 @@ class OneWorker
   # Obtain and parse required data from vm
   #
   # @return [Hash] required data from virtual machine
-  def process_vm(vm, user_map, image_map, benchmark_map)
+  def process_vm(vm, user_map, image_map, cluster_map, benchmark_map)
     data = common_data
     data.merge! output_type_specific_data
 
@@ -129,6 +134,9 @@ class OneWorker
     benchmark = search_benchmark(vm, benchmark_map)
     data['benchmark_type'] = benchmark[:benchmark_type]
     data['benchmark_value'] = benchmark[:benchmark_value]
+
+    site_name = cluster_map[vm['HISTORY_RECORDS/HISTORY[1]/CID']]
+    data['site_name'] = site_name if site_name
 
     data
   end
@@ -220,6 +228,7 @@ class OneWorker
     oda = OneDataAccessor.new(false, logger)
     user_map = create_user_map(oda)
     image_map = create_image_map(oda)
+    cluster_map = create_cluster_map(oda)
     benchmark_map = oda.benchmark_map
 
     data = []
@@ -230,7 +239,7 @@ class OneWorker
 
       begin
         logger.debug("Processing vm with id: #{vm_id}.")
-        vm_data = process_vm(vm, user_map, image_map, benchmark_map)
+        vm_data = process_vm(vm, user_map, image_map, cluster_map, benchmark_map)
 
         validator = DataValidators::ApelDataValidator.new(logger) if APEL_OT.include?(Settings.output['output_type'])
         validator = DataValidators::PbsDataValidator.new(logger) if PBS_OT.include?(Settings.output['output_type'])
