@@ -54,6 +54,13 @@ describe OneWorker do
     end
   end
 
+  describe '.create_cluster_map' do
+    it 'returns cluster map' do
+      expect(subject).to receive(:create_map).with(OpenNebula::ClusterPool, anything, anything) { 'map' }
+      expect(subject.create_cluster_map(oda)).to eq('map')
+    end
+  end
+
   describe '.create_map' do
     let(:pool_type) { double('pool_type') }
     let(:mapping) { double('mapping') }
@@ -137,7 +144,7 @@ describe OneWorker do
     before :example do
       Settings.output['output_type'] = 'apel-0.2'
       Settings.output.apel['endpoint'] = 'machine.hogwarts.co.uk'
-      Settings.output.apel['site_name'] = 'Hogwarts'
+      Settings.output.apel['site_name'] = 'site-name-from-config'
       Settings.output.apel['cloud_type'] = 'OpenNebula'
       Settings.output.apel['cloud_compute_service'] = nil
 
@@ -153,7 +160,7 @@ describe OneWorker do
       data = {}
 
       data['endpoint'] = 'machine.hogwarts.co.uk'
-      data['site_name'] = 'Hogwarts'
+      data['site_name'] = 'site-name-from-cluster'
       data['cloud_type'] = 'OpenNebula'
       data['cloud_compute_service'] = nil
 
@@ -205,13 +212,14 @@ describe OneWorker do
 
     let(:user_map) { {'120' => '/Dn=FrOm/CN=DN/CN=MaP'} }
     let(:image_map) { {'31' => 'image_name_from_map'} }
+    let(:cluster_map) { {'100' => 'site-name-from-cluster'}}
     let(:benchmark_map) { {'123' => nil}  }
 
     context 'with apel specific data' do
       let(:filename) { 'one_worker_vm_dn01.xml' }
 
       it 'returns correct vm data with apel specific data' do
-        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -229,7 +237,6 @@ describe OneWorker do
         data['host'] = 'on_localhost'
 
         data.delete 'endpoint'
-        data.delete 'site_name'
         data.delete 'cloud_type'
         data.delete 'cloud_compute_service'
       end
@@ -237,7 +244,7 @@ describe OneWorker do
       let(:filename) { 'one_worker_vm_dn01.xml' }
 
       it 'returns correct vm data with pbs specific data' do
-        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -245,7 +252,7 @@ describe OneWorker do
       let(:filename) { 'one_worker_vm_dn01.xml' }
 
       it 'returns correct vm data with user\'s dn from template' do
-        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -257,7 +264,7 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with user\'s dn from map' do
-        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -265,7 +272,7 @@ describe OneWorker do
       let(:filename) { 'one_worker_vm_image_name01.xml' }
 
       it 'returns correct vm data with image name from VMCATCHER_EVENT_AD_MPURI tag' do
-        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -277,7 +284,7 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with image name from map' do
-        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -290,7 +297,7 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with image name from USER_TEMPLATE/OCCI_COMPUTE_MIXINS tag' do
-        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -303,7 +310,7 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with image name from USER_TEMPLATE/OCCI_MIXIN tag' do
-        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -316,7 +323,7 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with image name from TEMPLATE/OCCI_MIXIN tag' do
-        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
       end
     end
 
@@ -328,7 +335,47 @@ describe OneWorker do
       end
 
       it 'returns correct vm data with image name as image id' do
-        expect(subject.process_vm(vm, user_map, image_map, benchmark_map)).to eq(data)
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
+      end
+    end
+
+    context 'without site-name on cluster (APEL)' do
+      let(:filename) { 'one_worker_vm_dn01.xml' }
+      let(:cluster_map) { {} }
+
+      before :example do
+        data['site_name'] = 'site-name-from-config'
+      end
+
+      it 'returns correct vm data with site-name from configuration file' do
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
+      end
+    end
+
+    context 'without site-name on cluster (NON APEL)' do
+      let(:filename) { 'one_worker_vm_dn01.xml' }
+      let(:cluster_map) { {} }
+
+      before :example do
+        Settings.output['output_type'] = 'pbs-0.1'
+        Settings.output.pbs['realm'] = 'REALM'
+        Settings.output.pbs['queue'] = 'cloud'
+        Settings.output.pbs['scratch_type'] = 'local'
+        Settings.output.pbs['host_identifier'] = 'on_localhost'
+
+        data['realm'] = 'REALM'
+        data['pbs_queue'] = 'cloud'
+        data['scratch_type'] = 'local'
+        data['host'] = 'on_localhost'
+
+        data.delete 'endpoint'
+        data.delete 'cloud_type'
+        data.delete 'cloud_compute_service'
+        data.delete 'site_name'
+      end
+
+      it 'returns correct vm data without any site-name' do
+        expect(subject.process_vm(vm, user_map, image_map, cluster_map, benchmark_map)).to eq(data)
       end
     end
   end
@@ -445,13 +492,14 @@ describe OneWorker do
       allow(OneDataAccessor).to receive(:new) { oda }
       allow(subject).to receive(:create_user_map) { 'user_map' }
       allow(subject).to receive(:create_image_map) { 'image_map' }
+      allow(subject).to receive(:create_cluster_map) { 'cluster_map' }
       allow(oda).to receive(:benchmark_map) { 'benchmark_map' }
       allow(subject).to receive(:load_vm).with('10', oda).and_return('10')
       allow(subject).to receive(:load_vm).with('20', oda).and_return('20')
       allow(subject).to receive(:load_vm).with('30', oda).and_return('30')
-      allow(subject).to receive(:process_vm).with('10', anything, anything, anything).and_return('data_vm1')
-      allow(subject).to receive(:process_vm).with('20', anything, anything, anything).and_return('data_vm2')
-      allow(subject).to receive(:process_vm).with('30', anything, anything, anything).and_return('data_vm3')
+      allow(subject).to receive(:process_vm).with('10', anything, anything, anything, anything).and_return('data_vm1')
+      allow(subject).to receive(:process_vm).with('20', anything, anything, anything, anything).and_return('data_vm2')
+      allow(subject).to receive(:process_vm).with('30', anything, anything, anything, anything).and_return('data_vm3')
     end
 
     let(:vms) { '10|20|30' }
