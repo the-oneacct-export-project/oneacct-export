@@ -212,11 +212,12 @@ class OneDataAccessor
         benchmark_values = host['TEMPLATE/BENCHMARK_VALUES'].split(/\s*\n\s*/)
       else
         cluster_id = host['CLUSTER_ID'].to_i
-        searched_cluster = OpenNebula::Cluster.new(OpenNebula::Cluster.build_xml(cluster_id), @client)
-        rc = searched_cluster.info
-        check_retval(rc, Errors::ResourceRetrievalError)
 
-        if searched_cluster
+        unless cluster_id == -1
+          searched_cluster = OpenNebula::Cluster.new(OpenNebula::Cluster.build_xml(cluster_id), @client)
+          rc = searched_cluster.info
+          check_retval(rc, Errors::ResourceRetrievalError)
+
           if (benchmark_type = searched_cluster['TEMPLATE/BENCHMARK_TYPE'])
             benchmark_values = searched_cluster['TEMPLATE/BENCHMARK_VALUES'].split(/\s*\n\s*/)
           end
