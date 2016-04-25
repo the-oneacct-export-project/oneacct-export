@@ -30,4 +30,5 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'syslogger', '~> 1.6'
   spec.add_runtime_dependency 'sidekiq', '~> 3.4'
   spec.add_runtime_dependency 'settingslogic', '~> 2.0.9'
+  spec.add_runtime_dependency 'chronic_duration', '~> 0.10'
 end

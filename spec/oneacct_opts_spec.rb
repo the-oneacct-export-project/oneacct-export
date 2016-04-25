@@ -58,6 +58,28 @@ describe OneacctOpts do
   end
 
   describe '#check_options_restrictions' do
+    context 'with both time range start and time period specified' do
+      before :example do
+        options.records_from = Time.now
+        options.records_for = 'week'
+      end
+
+      it 'fails with ArgumentError' do
+        expect { OneacctOpts.check_options_restrictions(options) }.to raise_error(ArgumentError)
+      end
+    end
+
+    context 'with both time range end and time period specified' do
+      before :example do
+        options.records_to = Time.now
+        options.records_for = 'week'
+      end
+
+      it 'fails with ArgumentError' do
+        expect { OneacctOpts.check_options_restrictions(options) }.to raise_error(ArgumentError)
+      end
+    end
+
     context 'with wrong time range' do
       before :example do
         options.records_from = (Time.new + 1000)
