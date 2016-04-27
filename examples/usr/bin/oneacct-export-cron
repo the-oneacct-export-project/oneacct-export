@@ -28,16 +28,40 @@
 conf_dir="/etc/oneacct-export"
 omnibus_base_dir="/opt/oneacct-export"
 
-week_start_epoch=$((`date +%s`-604800))
-week_start_date=`date -d @$week_start_epoch +%F`
-
-if [ "x$1" = "x--all" ] || [ "x$1" = "x-all" ]; then
+if [ "x$1" = "x--all" ] || [ "x$1" = "x-a" ]; then
     # export all available accounting records
-    options="--blocking --timeout 3600"
+    options=""
+    blocking_timeout="3600"
+elif [ "x$1" = "x--two-weeks" ]; then
+    # export only records from the last two weeks
+    options="--records-for '2 weeks'"
+    blocking_timeout="1800"
+elif [ "x$1" = "x--month" ] || [ "x$1" = "x-m" ]; then
+    # export only records from the last month
+    options="--records-for month"
+    blocking_timeout="2700"
+elif [ "x$1" = "x--two-months" ]; then
+    # export only records from the last two months
+    options="--records-for '2 months'"
+    blocking_timeout="2700"
+elif [ "x$1" = "x--six-months" ]; then
+    # export only records from the last six months
+    options="--records-for '6 months'"
+    blocking_timeout="3600"
+elif [ "x$1" = "x--year" ] || [ "x$1" = "x-y" ]; then
+    # export only records from the last year
+    options="--records-for year"
+    blocking_timeout="3600"
+elif [ "x$1" = "x" ] || [ "x$1" = "x--week" ] || [ "x$1" = "x-w" ]; then
+    # export only records from the last week (default)
+    options="--records-for week"
+    blocking_timeout="1800"
 else
-    # export only records from the last 7 days
-    options="--records-from $week_start_date --blocking --timeout 1800"
+    echo "Unknown option $1."
+    exit 1
 fi
+
+options="$options --blocking --timeout $blocking_timeout"
 
 if [ -f "$conf_dir/compat.one" ]; then
     options="$options --compatibility-mode"
