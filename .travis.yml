@@ -14,3 +14,7 @@ matrix:
 branches:
   only:
     - master
+
+install: 'gem install bundler -v ">= 1.7.12" && bundle install --jobs=3 --retry=5'
+
+sudo: false
