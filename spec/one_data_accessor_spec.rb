@@ -442,7 +442,7 @@ describe OneDataAccessor do
     let(:host_pool) {
       file = File.read("#{GEM_DIR}/mock/#{host_filename}")
       xml = OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(file, 'HOST'))
-      host_pool = [ xml ]
+      [ xml ]
     }
 
     let(:searched_cluster) {
@@ -500,10 +500,6 @@ describe OneDataAccessor do
     end
 
     context 'with no data on a host and without host\'s cluster' do
-      before :example do
-        expect(searched_cluster).to receive(:info)
-      end
-
       let(:host_filename) { 'one_data_accessor_host_05.xml' }
       let(:expected) { { '5' => {} } }
       let(:searched_cluster) { nil }

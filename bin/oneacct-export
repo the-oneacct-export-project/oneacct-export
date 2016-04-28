@@ -8,6 +8,9 @@ require 'settings'
 require 'fileutils'
 require 'json'
 require 'oneacct_opts'
+require 'chronic_duration'
+
+ChronicDuration.raise_exceptions = true
 
 # parse options from command line
 options = OneacctOpts.parse(ARGV)
@@ -31,9 +34,18 @@ end
 
 OneacctExporter::Log.setup_log_level(log)
 
-range = {}
-range[:from] = options.records_from
-range[:to] = options.records_to
+begin
+  range = {}
+  range[:from] = Time.now - ChronicDuration.parse(options.records_for) if options.records_for
+
+  if options.records_from || options.records_to
+    range[:from] = options.records_from
+    range[:to] = options.records_to
+  end
+rescue ChronicDuration::DurationParseError => e
+  puts "Cannot parse a time period: #{e.message} Quitting."
+  exit
+end
 
 groups = {}
 groups[:include] = options.include_groups if options.include_groups

@@ -29,6 +29,11 @@ class OneacctOpts
         options.records_to = time
       end
 
+      opts.on('--records-for PERIOD',
+              'Retrieves only records within the time PERIOD') do |period|
+        options.records_for = period
+      end
+
       opts.on('--include-groups [GROUP1,GROUP2,...]', Array,
               'Retrieves only records of virtual machines which '\
               'belong to the specified groups') do |groups|
@@ -97,6 +102,11 @@ class OneacctOpts
 
   # Make sure command line parameters are sane
   def self.check_options_restrictions(options)
+    # make sure only one time option is used
+    if (options.records_from || options.records_to) && options.records_for
+      fail ArgumentError, 'Cannot use both time period and time range options.'
+    end
+
     # make sure date range make sense
     if options.records_from && options.records_to && options.records_from >= options.records_to
       fail ArgumentError, 'Wrong time range for records retrieval.'
