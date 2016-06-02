@@ -279,16 +279,17 @@ class OneWorker
   #
   # @return [Hash] benchmark type and value or both can be nil
   def search_benchmark(vm, benchmark_map)
-    nil_benchmark = { :benchmark_type => nil, :benchmark_value => nil }
     map = benchmark_map[vm['HISTORY_RECORDS/HISTORY[last()]/HID']]
-    return nil_benchmark unless map
-    return nil_benchmark unless vm['USER_TEMPLATE/OCCI_COMPUTE_MIXINS']
+
+    return {} unless vm['USER_TEMPLATE/OCCI_COMPUTE_MIXINS']
+    return {} if map.nil? || map.empty?
 
     occi_compute_mixins = vm['USER_TEMPLATE/OCCI_COMPUTE_MIXINS'].split(/\s+/)
     occi_compute_mixins.each do |mixin|
       return { :benchmark_type => map[:benchmark_type], :benchmark_value => map[:mixins][mixin] } if map[:mixins].has_key?(mixin)
     end
-    nil_benchmark
+
+    {}
   end
 
   private

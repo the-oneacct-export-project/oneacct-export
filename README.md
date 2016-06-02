@@ -116,6 +116,33 @@ INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_SL_CHECKSUM_SHA512"
 INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_HV_VERSION"
 ~~~
 
+###Configure benchmark host attributes in OpenNebula
+In order to recognize and fill `BenchmarkType` and `Benchmark` APEL v0.4 fields,
+two attributes have to be set for every host in OpenNebula:
+* `BENCHMARK_TYPE` - represents benchmark's type. For example: `HEP-SPEC06`
+* `BENCHMARK_VALUES` - represents a map of virtual machine instance types and
+their measured values of said benchmark formatted as JSON. For example:
+```
+{
+  "http://schemas.fedcloud.egi.eu/occi/infrastructure/resource_tpl#atlas":312.39,
+  "http://schemas.fedcloud.egi.eu/occi/infrastructure/resource_tpl#extra_large":146.64,
+  "http://schemas.fedcloud.egi.eu/occi/infrastructure/resource_tpl#goliath":255.80,
+  "http://fedcloud.egi.eu/occi/compute/flavour/1.0#large":84.46
+}
+```
+Virtual machine instance types are in form of OCCI `scheme#term` of `resource_tpl` mixins.
+You can list your mixins via OCCI cli utility with command
+```
+occi --endpoint $ENDPOINT -a list -r resource_tpl
+```
+
+To check whether the value is correctly formatted use one of the JSON format validators and formatters, for example
+[https://jsonformatter.curiousconcept.com/](https://jsonformatter.curiousconcept.com/).
+
+Both attributes can be set both for clusters and hosts in OpenNebula with hosts'
+attributes taking precedence. If attributes are set only for cluster, all hosts
+within the cluster will be assigned these values.
+
 ###Set Rails environment variable according to your environment
 You have to set system environment variable `RAILS_ENV` to one of the
 values production, development or test. OneacctExport is not a Rails
@@ -147,9 +174,10 @@ Usage oneacct-export [options]
 
         --records-from TIME          Retrieves only records newer than TIME
         --records-to TIME            Retrieves only records older than TIME
-        --include-groups GROUP1[,GROUP2,...]
+        --records-for PERIOD         Retrieves only records within the time PERIOD
+        --include-groups [GROUP1,GROUP2,...]
                                      Retrieves only records of virtual machines which belong to the specified groups
-        --exclude-groups GROUP1[,GROUP2,...]
+        --exclude-groups [GROUP1,GROUP2,...]
                                      Retrieves only records of virtual machines which don't belong to the specified groups
         --group-file FILE            If --include-groups or --exclude-groups specified, loads groups from file FILE
     -b, --[no-]blocking              Run in a blocking mode - wait until all submitted jobs are processed
@@ -158,6 +186,19 @@ Usage oneacct-export [options]
     -h, --help                       Shows this message
     -v, --version                    Shows version
 ```
+
+###Package specific scripts
+When installed from packages build via [omnibus packaging for OneacctExport](https://github.com/EGI-FCTF/omnibus-oneacct-export),
+both Sidekiq and OneacctExport are automatically registered as cron jobs to run
+periodically. Cron job managing OneacctExport uses a bash script which is
+simplifying OneacctExport interface for most common use cases. After the installation,
+script can be found in `/usr/bin/oneacct-export-cron`. Script can accept command line options
+`--week|-w` (default), `--two-weeks`, `--month|-m`, `--two-months`, `--six-months`, `--year|-y` and `--all|-a`
+which sets age of retrieved records accordingly. There is also a set of files
+which when present in `/opt/oneacct-export/` directory serves as a configuration shortcut:
+* `compat.one` - turns on compatibility mode (same as OneacctExport option `--compatibility-mode`)
+* `groups.include` - contains list of groups to include (same as combination of OneacctExport options `--include-groups` and `--group-file`)
+* `groups.exclude` - contains list of groups to exclude (same as combination of OneacctExport options `--exclude-groups` and `--group-file`)
 
 ##Code Documentation
 [Code Documentation for OneacctExport by YARD](http://rubydoc.info/github/EGI-FCTF/oneacct_export/)
@@ -178,4 +219,3 @@ To change the log level of `oneacct-export` and `sidekiq` you have to set the en
 ```bash
 export ONEACCT_EXPORT_LOG_LEVEL=DEBUG
 ```
-

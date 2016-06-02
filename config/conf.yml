@@ -2,7 +2,7 @@
 defaults: &defaults
   output:
     output_dir: /var/spool/apel/outgoing/00000000 # Directory for outgoing messages
-    output_type: apel-0.2 # Format of outgoing messages. Choices are: apel-0.2, pbs-0.1, logstash-0.1
+    output_type: apel-0.4 # Format of outgoing messages. Choices are: apel-0.2, apel-0.4, pbs-0.1, logstash-0.1
     num_of_vms_per_file: 500 # Maximum number of virtual machine records per one output file
     apel: # Options for apel output format
       site_name: Undefined # Usually a short provider name, e.g. CESNET
