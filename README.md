@@ -174,9 +174,10 @@ Usage oneacct-export [options]
 
         --records-from TIME          Retrieves only records newer than TIME
         --records-to TIME            Retrieves only records older than TIME
-        --include-groups GROUP1[,GROUP2,...]
+        --records-for PERIOD         Retrieves only records within the time PERIOD
+        --include-groups [GROUP1,GROUP2,...]
                                      Retrieves only records of virtual machines which belong to the specified groups
-        --exclude-groups GROUP1[,GROUP2,...]
+        --exclude-groups [GROUP1,GROUP2,...]
                                      Retrieves only records of virtual machines which don't belong to the specified groups
         --group-file FILE            If --include-groups or --exclude-groups specified, loads groups from file FILE
     -b, --[no-]blocking              Run in a blocking mode - wait until all submitted jobs are processed
