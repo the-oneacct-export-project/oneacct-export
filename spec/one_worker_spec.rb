@@ -602,7 +602,7 @@ describe OneWorker do
     context 'with empty benchmark_map' do
       let(:filename) { 'one_worker_vm_search_benchmark_01.xml' }
       let(:benchmark_map) { {} }
-      let(:expected) { { :benchmark_type => nil, :benchmark_value => nil } }
+      let(:expected) { {} }
 
       it 'returns array with two nil items' do
         expect(subject.search_benchmark(vm, benchmark_map)).to eq(expected)
@@ -611,7 +611,7 @@ describe OneWorker do
 
     context 'with no data for the virtual machine in benchmark_map' do
       let(:filename) { 'one_worker_vm_search_benchmark_02.xml' }
-      let(:expected) { { :benchmark_type => nil, :benchmark_value => nil } }
+      let(:expected) { {} }
 
       it 'returns array with two nil items' do
         expect(subject.search_benchmark(vm, benchmark_map)).to eq(expected)
