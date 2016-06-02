@@ -116,6 +116,33 @@ INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_SL_CHECKSUM_SHA512"
 INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_HV_VERSION"
 ~~~
 
+###Configure benchmark host attributes in OpenNebula
+In order to recognize and fill `BenchmarkType` and `Benchmark` APEL v0.4 fields,
+two attributes have to be set for every host in OpenNebula:
+* `BENCHMARK_TYPE` - represents benchmark's type. For example: `HEP-SPEC06`
+* `BENCHMARK_VALUES` - represents a map of virtual machine instance types and
+their measured values of said benchmark formatted as JSON. For example:
+```
+{
+  "http://schemas.fedcloud.egi.eu/occi/infrastructure/resource_tpl#atlas":312.39,
+  "http://schemas.fedcloud.egi.eu/occi/infrastructure/resource_tpl#extra_large":146.64,
+  "http://schemas.fedcloud.egi.eu/occi/infrastructure/resource_tpl#goliath":255.80,
+  "http://fedcloud.egi.eu/occi/compute/flavour/1.0#large":84.46
+}
+```
+Virtual machine instance types are in form of OCCI `scheme#term` of `resource_tpl` mixins.
+You can list your mixins via OCCI cli utility with command
+```
+occi --endpoint $ENDPOINT -a list -r resource_tpl
+```
+
+To check whether the value is correctly formated use one of the JSON format validators and formatters, for example
+[https://jsonformatter.curiousconcept.com/](https://jsonformatter.curiousconcept.com/).
+
+Both attributes can be set both for clusters and hosts in OpenNebula with hosts'
+attributes taking precedence. If attributes are set only for cluster, all hosts
+within the cluster will be assigned these values.
+
 ###Set Rails environment variable according to your environment
 You have to set system environment variable `RAILS_ENV` to one of the
 values production, development or test. OneacctExport is not a Rails
@@ -178,4 +205,3 @@ To change the log level of `oneacct-export` and `sidekiq` you have to set the en
 ```bash
 export ONEACCT_EXPORT_LOG_LEVEL=DEBUG
 ```
-
