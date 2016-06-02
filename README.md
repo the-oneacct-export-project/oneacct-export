@@ -136,7 +136,7 @@ You can list your mixins via OCCI cli utility with command
 occi --endpoint $ENDPOINT -a list -r resource_tpl
 ```
 
-To check whether the value is correctly formated use one of the JSON format validators and formatters, for example
+To check whether the value is correctly formatted use one of the JSON format validators and formatters, for example
 [https://jsonformatter.curiousconcept.com/](https://jsonformatter.curiousconcept.com/).
 
 Both attributes can be set both for clusters and hosts in OpenNebula with hosts'
@@ -186,6 +186,19 @@ Usage oneacct-export [options]
     -h, --help                       Shows this message
     -v, --version                    Shows version
 ```
+
+###Package specific scripts
+When installed from packages build via [omnibus packaging for OneacctExport](https://github.com/EGI-FCTF/omnibus-oneacct-export),
+both Sidekiq and OneacctExport are automatically registered as cron jobs to run
+periodically. Cron job managing OneacctExport uses a bash script which is
+simplifying OneacctExport interface for most common use cases. After the installation,
+script can be found in `/usr/bin/oneacct-export-cron`. Script can accept command line options
+`--week|-w` (default), `--two-weeks`, `--month|-m`, `--two-months`, `--six-months`, `--year|-y` and `--all|-a`
+which sets age of retrieved records accordingly. There is also a set of files
+which when present in `/opt/oneacct-export/` directory serves as a configuration shortcut:
+* `compat.one` - turns on compatibility mode (same as OneacctExport option `--compatibility-mode`)
+* `groups.include` - contains list of groups to include (same as combination of OneacctExport options `--include-groups` and `--group-file`)
+* `groups.exclude` - contains list of groups to exclude (same as combination of OneacctExport options `--exclude-groups` and `--group-file`)
 
 ##Code Documentation
 [Code Documentation for OneacctExport by YARD](http://rubydoc.info/github/EGI-FCTF/oneacct_export/)
