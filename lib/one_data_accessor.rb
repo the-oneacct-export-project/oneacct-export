@@ -16,6 +16,8 @@ class OneDataAccessor
   include InputValidator
 
   STATE_DONE = '6'
+  BENCHMARK_TYPE_XPATH = 'TEMPLATE/BENCHMARK_TYPE'
+  BENCHMARK_VALUES_XPATH = 'TEMPLATE/BENCHMARK_VALUES'
 
   attr_reader :log, :batch_size, :client, :compatibility
   attr_accessor :start_vm_id
@@ -197,45 +199,55 @@ class OneDataAccessor
   #
   # @return [Hash] hosts' IDs and hash with benchmark name and value
   def benchmark_map
+    map = {}
     host_pool = OpenNebula::HostPool.new(@client)
     rc = host_pool.info
     check_retval(rc, Errors::ResourceRetrievalError)
 
-    bench_map = {}
-
     host_pool.each do |host|
-      structure = {}
-      benchmark_values = nil
-      benchmark_type = nil
-
-      if (benchmark_type = host['TEMPLATE/BENCHMARK_TYPE'])
-        benchmark_values = host['TEMPLATE/BENCHMARK_VALUES'].split(/\s*\n\s*/)
-      else
-        cluster_id = host['CLUSTER_ID'].to_i
-
-        unless cluster_id == -1
-          searched_cluster = OpenNebula::Cluster.new(OpenNebula::Cluster.build_xml(cluster_id), @client)
-          rc = searched_cluster.info
-          check_retval(rc, Errors::ResourceRetrievalError)
-
-          if (benchmark_type = searched_cluster['TEMPLATE/BENCHMARK_TYPE'])
-            benchmark_values = searched_cluster['TEMPLATE/BENCHMARK_VALUES'].split(/\s*\n\s*/)
-          end
-        end
+      benchmark = benchmark_values(host)
+      if benchmark.empty?
+        cluster = cluster_for_host(host)
+        benchmark = benchmark_values(cluster) if cluster
       end
 
-      if benchmark_values
-        mixins = {}
-        benchmark_values.each do |value|
-          values = value.split(/\s+/, 2)
-          mixins[values[0]] = values[1]
-        end
-        structure = { :benchmark_type => benchmark_type, :mixins => mixins }
-      end
-
-      bench_map[host['ID']] = structure
+      map[host['ID']] = benchmark
     end
 
-    bench_map
+    map
+  end
+
+  # Returns benchmark type and values of specified entity
+  #
+  # @param [OpenNebula::PoolElement] entity
+  # @return [Hash] benchmark type and values in form of hash
+  def benchmark_values(entity)
+    benchmark_type = entity[BENCHMARK_TYPE_XPATH]
+    return {} unless benchmark_type
+
+    mixins = {}
+    benchmark_values = entity[BENCHMARK_VALUES_XPATH]
+    if benchmark_values
+      mixins = JSON.parse(benchmark_values, :max_nesting => 1)
+    end
+
+    { :benchmark_type => benchmark_type, :mixins => mixins }
+  end
+
+  # Returns object representing a cluster for specified host
+  #
+  # @param [OpenNebula::Host] host
+  # @return [OpenNebula::Cluster] host's cluster
+  def cluster_for_host(host)
+    cluster_id = host['CLUSTER_ID'].to_i
+
+    # host without cluster
+    return nil if cluster_id == -1
+
+    cluster = OpenNebula::Cluster.new(OpenNebula::Cluster.build_xml(cluster_id), @client)
+    rc = cluster.info
+    check_retval(rc, Errors::ResourceRetrievalError)
+
+    cluster
   end
 end

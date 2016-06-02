@@ -453,7 +453,7 @@ describe OneDataAccessor do
     context 'with correct data on a host with one benchmark value' do
       let(:host_filename) { 'one_data_accessor_host_01.xml' }
       let(:expected) { { '1' => { :benchmark_type => 'bench_type_1',
-                                  :mixins => { 'mixin1' => '36.9' } } } }
+                                  :mixins => { 'mixin1' => 36.9 } } } }
 
       it 'creates correct benchmark_map' do
         expect(subject.benchmark_map).to eq(expected)
@@ -463,7 +463,7 @@ describe OneDataAccessor do
     context 'with correct data on a host with two benchmark values' do
       let(:host_filename) { 'one_data_accessor_host_02.xml' }
       let(:expected) { { '2' => { :benchmark_type => 'bench_type_2',
-                                  :mixins => { 'mixin1' => '788.6', 'mixin2' => '123.123' } } } }
+                                  :mixins => { 'mixin1' => 788.6, 'mixin2' => 123.123 } } } }
 
       it 'creates correct benchmark_map' do
         expect(subject.benchmark_map).to eq(expected)
@@ -478,7 +478,7 @@ describe OneDataAccessor do
       let(:host_filename) { 'one_data_accessor_host_03.xml' }
       let(:cluster_filename) { 'one_data_accessor_cluster_01.xml' }
       let(:expected) { { '3' => { :benchmark_type => 'bench_type_cluster_1',
-                                  :mixins => { 'mixin1' => '21.7' } } } }
+                                  :mixins => { 'mixin1' => 21.7 } } } }
 
       it 'creates correct benchmark_map' do
         expect(subject.benchmark_map).to eq(expected)
