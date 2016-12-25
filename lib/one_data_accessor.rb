@@ -17,7 +17,7 @@ class OneDataAccessor
 
   STATE_DONE = '6'
   BENCHMARK_TYPE_XPATH = 'TEMPLATE/BENCHMARK_TYPE'
-  BENCHMARK_VALUES_XPATH = 'TEMPLATE/BENCHMARK_VALUES'
+  BENCHMARK_VALUE_XPATH = 'TEMPLATE/BENCHMARK_VALUE'
 
   attr_reader :log, :batch_size, :client, :compatibility
   attr_accessor :start_vm_id
@@ -199,14 +199,14 @@ class OneDataAccessor
   #
   # @return [Hash] hosts' IDs and hash with benchmark name and value
   def benchmark_map
-    map = {}
+    map = Hash.new({})
     host_pool = OpenNebula::HostPool.new(@client)
     rc = host_pool.info
     check_retval(rc, Errors::ResourceRetrievalError)
 
     host_pool.each do |host|
       benchmark = benchmark_values(host)
-      if benchmark.empty?
+      unless benchmark[:benchmark_type]
         cluster = cluster_for_host(host)
         benchmark = benchmark_values(cluster) if cluster
       end
@@ -222,16 +222,7 @@ class OneDataAccessor
   # @param [OpenNebula::PoolElement] entity
   # @return [Hash] benchmark type and values in form of hash
   def benchmark_values(entity)
-    benchmark_type = entity[BENCHMARK_TYPE_XPATH]
-    return {} unless benchmark_type
-
-    mixins = {}
-    benchmark_values = entity[BENCHMARK_VALUES_XPATH]
-    if benchmark_values
-      mixins = JSON.parse(benchmark_values, :max_nesting => 1)
-    end
-
-    { :benchmark_type => benchmark_type, :mixins => mixins }
+    { benchmark_type: entity[BENCHMARK_TYPE_XPATH], benchmark_value: entity[BENCHMARK_VALUE_XPATH] }
   end
 
   # Returns object representing a cluster for specified host
