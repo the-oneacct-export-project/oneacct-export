@@ -213,7 +213,7 @@ describe OneWorker do
     let(:user_map) { {'120' => '/Dn=FrOm/CN=DN/CN=MaP'} }
     let(:image_map) { {'31' => 'image_name_from_map'} }
     let(:cluster_map) { {'100' => 'site-name-from-cluster'}}
-    let(:benchmark_map) { {'123' => nil}  }
+    let(:benchmark_map) { {'11' => {}}  }
 
     context 'with apel specific data' do
       let(:filename) { 'one_worker_vm_dn01.xml' }
@@ -583,49 +583,4 @@ describe OneWorker do
       end
     end
   end
-
-  describe '.search_benchmark' do
-    let(:vm) do
-      xml = File.read("#{GEM_DIR}/mock/#{filename}")
-      OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(xml, 'VM'))
-    end
-
-    let(:benchmark_map) do
-      values1 = { :benchmark_type => 'bench_type_1', :mixins => { 'mixin1' => '34.12' } }
-      values2 = { :benchmark_type => 'bench_type_2', :mixins => { 'mixin2' => '123.2', 'mixin3' => '129.6' } }
-      values3 = { }
-
-      benchmark_map = { '19' => values1, '11' => values2, '23' => values3 }
-      benchmark_map
-    end
-
-    context 'with empty benchmark_map' do
-      let(:filename) { 'one_worker_vm_search_benchmark_01.xml' }
-      let(:benchmark_map) { {} }
-      let(:expected) { {} }
-
-      it 'returns array with two nil items' do
-        expect(subject.search_benchmark(vm, benchmark_map)).to eq(expected)
-      end
-    end
-
-    context 'with no data for the virtual machine in benchmark_map' do
-      let(:filename) { 'one_worker_vm_search_benchmark_02.xml' }
-      let(:expected) { {} }
-
-      it 'returns array with two nil items' do
-        expect(subject.search_benchmark(vm, benchmark_map)).to eq(expected)
-      end
-    end
-
-    context 'with correct data in vm and benchmark_map' do
-      let(:filename) { 'one_worker_vm_search_benchmark_01.xml' }
-      let(:expected) { { :benchmark_type => 'bench_type_2', :benchmark_value => '129.6' } }
-
-      it 'returns correct benchmark type and value' do
-        expect(subject.search_benchmark(vm, benchmark_map)).to eq(expected)
-      end
-    end
-  end
-
 end
