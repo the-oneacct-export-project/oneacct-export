@@ -49,7 +49,7 @@
   <TEMPLATE>
     <ARCH><![CDATA[x86_64]]></ARCH>
     <BENCHMARK_TYPE>bench_type_1</BENCHMARK_TYPE>
-    <BENCHMARK_VALUES>{"mixin1": 36.9}</BENCHMARK_VALUES>
+    <BENCHMARK_VALUE>36.9</BENCHMARK_VALUE>
     <CPUSPEED><![CDATA[1200]]></CPUSPEED>
     <ERROR><![CDATA[Thu Nov 19 11:56:06 2015 : Error monitoring Host whatever.in.czech.republic.cz (21): -]]></ERROR>
     <HOSTNAME><![CDATA[whatever.in.czech.republic.cz]]></HOSTNAME>

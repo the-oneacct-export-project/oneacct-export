@@ -450,20 +450,10 @@ describe OneDataAccessor do
       OpenNebula::XMLElement.new(OpenNebula::XMLElement.build_xml(file, 'CLUSTER'))
     }
 
-    context 'with correct data on a host with one benchmark value' do
+    context 'with correct data on a host' do
       let(:host_filename) { 'one_data_accessor_host_01.xml' }
       let(:expected) { { '1' => { :benchmark_type => 'bench_type_1',
-                                  :mixins => { 'mixin1' => 36.9 } } } }
-
-      it 'creates correct benchmark_map' do
-        expect(subject.benchmark_map).to eq(expected)
-      end
-    end
-
-    context 'with correct data on a host with two benchmark values' do
-      let(:host_filename) { 'one_data_accessor_host_02.xml' }
-      let(:expected) { { '2' => { :benchmark_type => 'bench_type_2',
-                                  :mixins => { 'mixin1' => 788.6, 'mixin2' => 123.123 } } } }
+                                  :benchmark_value => '36.9' } } }
 
       it 'creates correct benchmark_map' do
         expect(subject.benchmark_map).to eq(expected)
@@ -478,7 +468,7 @@ describe OneDataAccessor do
       let(:host_filename) { 'one_data_accessor_host_03.xml' }
       let(:cluster_filename) { 'one_data_accessor_cluster_01.xml' }
       let(:expected) { { '3' => { :benchmark_type => 'bench_type_cluster_1',
-                                  :mixins => { 'mixin1' => 21.7 } } } }
+                                  :benchmark_value => '21.7' } } }
 
       it 'creates correct benchmark_map' do
         expect(subject.benchmark_map).to eq(expected)
@@ -492,7 +482,8 @@ describe OneDataAccessor do
 
       let(:host_filename) { 'one_data_accessor_host_04.xml' }
       let(:cluster_filename) { 'one_data_accessor_cluster_02.xml' }
-      let(:expected) { { '4' => {} } }
+      let(:expected) { { '4' => { :benchmark_type => nil,
+                                  :benchmark_value => nil } } }
 
       it 'creates correct benchmark_map' do
         expect(subject.benchmark_map).to eq(expected)
@@ -501,7 +492,8 @@ describe OneDataAccessor do
 
     context 'with no data on a host and without host\'s cluster' do
       let(:host_filename) { 'one_data_accessor_host_05.xml' }
-      let(:expected) { { '5' => {} } }
+      let(:expected) { { '5' => { :benchmark_type => nil,
+                                  :benchmark_value => nil } } }
       let(:searched_cluster) { nil }
 
       it 'creates correct benchmark_map' do
