@@ -131,7 +131,7 @@ class OneWorker
     data['disks'] = disk_records(vm)
     data['number_of_public_ips'] = number_of_public_ips(vm)
 
-    benchmark = search_benchmark(vm, benchmark_map)
+    benchmark = benchmark_map[vm['HISTORY_RECORDS/HISTORY[last()]/HID']]
     data['benchmark_type'] = benchmark[:benchmark_type]
     data['benchmark_value'] = benchmark[:benchmark_value]
 
@@ -270,26 +270,6 @@ class OneWorker
     msg = "Cannot write result: #{e.message}"
     logger.error(msg)
     raise msg
-  end
-
-  # Search benchmark type and value virtual machine.
-  #
-  # @param [OpenNebula::VirtualMachine] vm virtual machine
-  # @param [Hash] benchmark_map map of all hosts' benchmarks
-  #
-  # @return [Hash] benchmark type and value or both can be nil
-  def search_benchmark(vm, benchmark_map)
-    map = benchmark_map[vm['HISTORY_RECORDS/HISTORY[last()]/HID']]
-
-    return {} unless vm['USER_TEMPLATE/OCCI_COMPUTE_MIXINS']
-    return {} if map.nil? || map.empty?
-
-    occi_compute_mixins = vm['USER_TEMPLATE/OCCI_COMPUTE_MIXINS'].split(/\s+/)
-    occi_compute_mixins.each do |mixin|
-      return { :benchmark_type => map[:benchmark_type], :benchmark_value => map[:mixins][mixin] } if map[:mixins].has_key?(mixin)
-    end
-
-    {}
   end
 
   private
