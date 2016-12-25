@@ -69,6 +69,24 @@ class OneacctOpts
         options.compatibility = compatibility
       end
 
+      opts.on('--harden-ssl-security', 'Sets basic SSL options for better security.') do
+          OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:options] |= OpenSSL::SSL::OP_NO_SSLv2
+          OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:options] |= OpenSSL::SSL::OP_NO_SSLv3
+          OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:options] |= OpenSSL::SSL::OP_NO_COMPRESSION
+      end
+
+      opts.on('--ssl-cipher-suite CIPHER_SUITE', 'Sets SSL cipher suite.') do |suite|
+        OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:ciphers] = suite
+      end
+
+      opts.on('--ssl-version VERSION', 'Sets SSL version') do |version|
+        OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:ssl_version] = version
+      end
+
+      opts.on("--skip-ca-check", "Skip server certificate verification [NOT recommended]") do
+          silence_warnings { OpenSSL::SSL.const_set(:VERIFY_PEER, OpenSSL::SSL::VERIFY_NONE) }
+      end
+
       opts.on_tail('-h', '--help', 'Shows this message') do
         puts opts
         exit
@@ -172,5 +190,12 @@ class OneacctOpts
         fail ArgumentError, 'Missing some mandatory parameters for logstash output type. Check your configuration file.'
       end
     end
+  end
+
+  def self.silence_warnings
+    old_verbose, $VERBOSE = $VERBOSE, nil
+    yield
+  ensure
+    $VERBOSE = old_verbose
   end
 end
