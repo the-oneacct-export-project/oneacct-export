@@ -120,8 +120,8 @@ class OneWorker
     data['status_code'] = vm['STATE']
     data['status'] = vm.state_str
     data['cpu_count'] = vm['TEMPLATE/VCPU']
-    data['network_inbound'] = vm['NET_TX']
-    data['network_outbound'] = vm['NET_RX']
+    data['network_inbound'] = vm['MONITORING/NETTX']
+    data['network_outbound'] = vm['MONITORING/NETRX']
     data['memory'] = vm['TEMPLATE/MEMORY']
     data['image_name'] = vm['TEMPLATE/DISK[1]/VMCATCHER_EVENT_AD_MPURI']
     data['image_name'] ||= image_map[vm['TEMPLATE/DISK[1]/IMAGE_ID']]
