@@ -44,6 +44,12 @@ get_pid() {
     cat "$pid_file"
 }
 
+setup_dirs() {
+    mkdir -p "$run_dir"
+    chown "$user":"$user" "$run_dir"
+}
+
+
 is_running() {
     [ -f "$pid_file" ] && ps `get_pid` > /dev/null 2>&1
 }
@@ -53,6 +59,7 @@ start() {
         echo "Already started"
     else
         echo "Starting $name ..."
+        setup_dirs
 
         cd "$run_dir"
         sudo -u "$user" RAILS_ENV=production SSL_CERT_DIR=$SSL_CERT_DIR ONEACCT_EXPORT_LOG_LEVEL=$ONEACCT_EXPORT_LOG_LEVEL $cmd >> "$stdout_log" 2>> "$stderr_log" &
