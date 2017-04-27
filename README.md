@@ -7,14 +7,14 @@ Exporting OpenNebula accounting data.
 [![Code Climate](https://codeclimate.com/github/EGI-FCTF/oneacct_export.png)](https://codeclimate.com/github/EGI-FCTF/oneacct_export)
 
 
-##Requirements
+## Requirements
 * Ruby >= 2.0
 * Rubygems
 * Redis server (doesn't have to be present on the same machine)
 * OpenNebula >= 4.4 (doesn't have to be present on the same machine)
 
-##Installation
-###From distribution specific packages
+## Installation
+### From distribution specific packages
 Distribution specific packages can be created with
 [omnibus packaging for OneacctExport](https://github.com/EGI-FCTF/omnibus-oneacct-export).
 When installing via packages you don't have to install neither ruby
@@ -31,13 +31,13 @@ Currently supported distributions:
 * CentOS 5.10
 * CentOS 6.5
 
-###From RubyGems.org
+### From RubyGems.org
 To install the most recent stable version
 ```bash
 gem install oneacct-export
 ```
 
-###From source (dev)
+### From source (dev)
 **Installation from source should never be your first choice! Especially, if you are not
 familiar with RVM, Bundler, Rake and other dev tools for Ruby!**
 
@@ -53,13 +53,13 @@ bundle install
 bundle exec rake spec
 rake install
 ```
-##Configuration
-###Create a new user account
+## Configuration
+### Create a new user account
 Create or use an existing `apel` user account which will be used to run
 the export process. This account must be the same as the user account
 used by the APEL SSM client.
 
-###Create a configuration file for OneacctExport
+### Create a configuration file for OneacctExport
 Configuration file can be read by OneacctExport from these
 three locations:
 
@@ -73,7 +73,7 @@ file you have to follow the division into three environments: `production`,
 `development` and `test`. All the configuration options are described
 in the example configuration file.
 
-###Create a configuration file for Sidekiq
+### Create a configuration file for Sidekiq
 Sidekiq configuration file can be placed anywhere you want since you will provide
 path to the configuration later during the Sidekiq start. How the Sidekiq
 configuration should look like and what options you can use
@@ -84,7 +84,7 @@ The important thing is to set the same queue name in both
 OneacctExport and Sidekiq configuration files. OneacctExport
 is currently supporting adding jobs to only one queue.
 
-###Create required directories
+### Create required directories
 ```bash
 mkdir -p /var/run/oneacct-export
 chown apel:apel /var/run/oneacct-export
@@ -93,7 +93,7 @@ mkdir -p /var/log/oneacct-export
 chown apel:apel /var/log/oneacct-export
 ```
 
-###Configure RPC connection
+### Configure RPC connection
 RPC connection for OpenNebula can be configured in two ways:
 
 * Via OneacctExport configuration file, option xml_rpc and its suboptions
@@ -106,7 +106,7 @@ RPC connection for OpenNebula can be configured in two ways:
  System environment variable `ONE_XMLRPC` contains URL of OpenNebula RPC
  gate. If empty, the same information can be stored in `~/.one/one_endpoint`.
 
-###Configure vmcatcher IMAGE attribute inheritance in OpenNebula
+### Configure vmcatcher IMAGE attribute inheritance in OpenNebula
 In `oned.conf`:
 ~~~
 INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_AD_MPURI"
@@ -116,7 +116,7 @@ INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_SL_CHECKSUM_SHA512"
 INHERIT_IMAGE_ATTR = "VMCATCHER_EVENT_HV_VERSION"
 ~~~
 
-###Configure benchmark host attributes in OpenNebula
+### Configure benchmark host attributes in OpenNebula
 In order to recognize and fill `BenchmarkType` and `Benchmark` APEL v0.4 fields,
 two attributes have to be set for every host in OpenNebula:
 * `BENCHMARK_TYPE` - represents benchmark's type. For example: `HEP-SPEC06`
@@ -127,17 +127,17 @@ Both attributes can be set both for clusters and hosts in OpenNebula with hosts'
 attributes taking precedence. If attributes are set only for cluster, all hosts
 within the cluster will be assigned these values.
 
-###Set Rails environment variable according to your environment
+### Set Rails environment variable according to your environment
 You have to set system environment variable `RAILS_ENV` to one of the
 values production, development or test. OneacctExport is not a Rails
 application but we chose the Rails variable for easier possible integration in
 the future.
 
-##Usage
+## Usage
 
 **Both OpenNebula and Redis server must be running prior the next steps.**
 
-###Start sidekiq
+### Start sidekiq
 First you have to start Sidekiq so it can run the jobs from the queue. Since
 OneacctExport is not a Rails application Sidekiq has to be started with
 OneacctExport's worker class as an argument. For example:
@@ -146,7 +146,7 @@ OneacctExport's worker class as an argument. For example:
 sidekiq -r $PATH_TO_GEM_DIR/lib/one_worker.rb -C $PATH_TO_GEM_DIR/config/sidekiq.yml
 ```
 
-###Start OneacctExport
+### Start OneacctExport
 
 OneacctExport is run with executable `oneacct-export`. For a list of all
 available options run `oneacct-export -h`:
@@ -171,7 +171,7 @@ Usage oneacct-export [options]
     -v, --version                    Shows version
 ```
 
-###Package specific scripts
+### Package specific scripts
 When installed from packages build via [omnibus packaging for OneacctExport](https://github.com/EGI-FCTF/omnibus-oneacct-export),
 both Sidekiq and OneacctExport are automatically registered as cron jobs to run
 periodically. Cron job managing OneacctExport uses a bash script which is
@@ -184,21 +184,21 @@ which when present in `/opt/oneacct-export/` directory serves as a configuration
 * `groups.include` - contains list of groups to include (same as combination of OneacctExport options `--include-groups` and `--group-file`)
 * `groups.exclude` - contains list of groups to exclude (same as combination of OneacctExport options `--exclude-groups` and `--group-file`)
 
-##Code Documentation
+## Code Documentation
 [Code Documentation for OneacctExport by YARD](http://rubydoc.info/github/EGI-FCTF/oneacct_export/)
 
-##Continuous integration
+## Continuous integration
 [Continuous integration for OneacctExport by Travis-CI](http://travis-ci.org/EGI-FCTF/oneacct_export/)
 
-##Development
-###Contributing
+## Development
+### Contributing
 1. Fork it ( https://github.com/EGI-FCTF/oneacct_export/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
 
-###Debugging
+### Debugging
 To change the log level of `oneacct-export` and `sidekiq` you have to set the environment variable **ONEACCT_EXPORT_LOG_LEVEL** to log level you need. Supported log levels are `DEBUG`, `INFO`, `WARN` and `ERROR`.
 ```bash
 export ONEACCT_EXPORT_LOG_LEVEL=DEBUG
