@@ -1,0 +1,40 @@
+version: 2
+jobs:
+  build:
+    branches:
+      ignore:
+        - /.*/
+    docker:
+      - image: docker:stable
+    working_directory: /root/oneacct-export
+    steps:
+      - run: apk add --no-cache git openssh
+      - checkout
+      - setup_remote_docker
+      - run: |
+          git config --global --replace-all versionsort.prereleasesuffix ".alpha"
+          git config --global --add versionsort.prereleasesuffix ".beta"
+      - run: |
+          TAG=${CIRCLE_TAG#v}
+          BRANCH=${TAG/%.*/.x}
+          VERSION=${TAG}
+          LATEST=$(git tag --sort=-version:refname | head -n 1)
+
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+          docker build --build-arg branch=$BRANCH --build-arg version="$VERSION" -t oneacctexport/oneacct-export:$TAG -f docker/Dockerfile_oneacct-export .
+          docker push oneacctexport/oneacct-export:$TAG
+          docker build --build-arg branch=$BRANCH --build-arg version="$VERSION" -t oneacctexport/sidekiq:$TAG -f docker/Dockerfile_sidekiq .
+          docker push oneacctexport/sidekiq:$TAG
+
+          if [ "$LATEST" == "$CIRCLE_TAG" ]; then
+            docker tag oneacctexport/oneacct-export:$TAG oneacctexport/oneacct-export:latest
+            docker push oneacctexport/oneacct-export:latest
+            docker tag oneacctexport/sidekiq:$TAG oneacctexport/sidekiq:latest
+            docker push oneacctexport/sidekiq:latest
+          fi
+deployment:
+  fake_deploy_for_cci2:
+    tag: /v.*/
+    commands:
+      - echo "make tags run in 2.0"
