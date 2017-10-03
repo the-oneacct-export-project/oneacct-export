@@ -1,0 +1,14 @@
+ARG branch=master
+ARG version
+
+FROM misenko/oneacct-export:${version}
+
+ENV name="sidekiq"
+
+LABEL application=${name} \
+      description="Sidekiq" \
+      maintainer="kimle@cesnet.cz" \
+      version=${version} \
+      branch=${branch}
+
+ENTRYPOINT ["/oneacct-export/bin/sidekiq-wrapper.sh"]
