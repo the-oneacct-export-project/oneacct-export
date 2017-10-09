@@ -1,10 +1,10 @@
 # OneacctExport
 Exporting OpenNebula accounting data.
 
-[![Travis](https://img.shields.io/travis/the-oneacct-export-project/oneacct_export.svg?style=flat-square)](http://travis-ci.org/the-oneacct-export-project/oneacct_export)
-[![Gemnasium](https://img.shields.io/gemnasium/the-oneacct-export-project/oneacct_export.svg?style=flat-square)](https://gemnasium.com/the-oneacct-export-project/oneacct_export)
+[![Travis](https://img.shields.io/travis/the-oneacct-export-project/oneacct-export.svg?style=flat-square)](http://travis-ci.org/the-oneacct-export-project/oneacct-export)
+[![Gemnasium](https://img.shields.io/gemnasium/the-oneacct-export-project/oneacct-export.svg?style=flat-square)](https://gemnasium.com/the-oneacct-export-project/oneacct-export)
 [![Gem](https://img.shields.io/gem/v/oneacct-export.svg?style=flat-square)](https://rubygems.org/gems/oneacct-export)
-[![Code Climate](https://img.shields.io/codeclimate/github/the-oneacct-export-project/oneacct_export.svg?style=flat-square)](https://codeclimate.com/github/the-oneacct-export-project/oneacct_export)
+[![Code Climate](https://img.shields.io/codeclimate/github/the-oneacct-export-project/oneacct-export.svg?style=flat-square)](https://codeclimate.com/github/the-oneacct-export-project/oneacct-export)
 [![DockerHub](https://img.shields.io/badge/docker-ready-blue.svg?style=flat-square)](https://hub.docker.com/r/oneacctexport/oneacct-export/)
 
 
@@ -186,14 +186,14 @@ which when present in `/opt/oneacct-export/` directory serves as a configuration
 * `groups.exclude` - contains list of groups to exclude (same as combination of OneacctExport options `--exclude-groups` and `--group-file`)
 
 ## Code Documentation
-[Code Documentation for OneacctExport by YARD](http://rubydoc.info/github/the-oneacct-export-project/oneacct_export/)
+[Code Documentation for OneacctExport by YARD](http://rubydoc.info/github/the-oneacct-export-project/oneacct-export/)
 
 ## Continuous integration
-[Continuous integration for OneacctExport by Travis-CI](http://travis-ci.org/the-oneacct-export-project/oneacct_export/)
+[Continuous integration for OneacctExport by Travis-CI](http://travis-ci.org/the-oneacct-export-project/oneacct-export/)
 
 ## Development
 ### Contributing
-1. Fork it ( https://github.com/the-oneacct-export-project/oneacct_export/fork )
+1. Fork it ( https://github.com/the-oneacct-export-project/oneacct-export/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
