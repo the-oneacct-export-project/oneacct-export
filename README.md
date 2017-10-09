@@ -1,10 +1,11 @@
 # OneacctExport
 Exporting OpenNebula accounting data.
 
-[![Build Status](https://secure.travis-ci.org/EGI-FCTF/oneacct_export.png)](http://travis-ci.org/EGI-FCTF/oneacct_export)
-[![Dependency Status](https://gemnasium.com/EGI-FCTF/oneacct_export.png)](https://gemnasium.com/EGI-FCTF/oneacct_export)
-[![Gem Version](https://fury-badge.herokuapp.com/rb/oneacct-export.png)](https://badge.fury.io/rb/oneacct-export)
-[![Code Climate](https://codeclimate.com/github/EGI-FCTF/oneacct_export.png)](https://codeclimate.com/github/EGI-FCTF/oneacct_export)
+[![Travis](https://img.shields.io/travis/the-oneacct-export-project/oneacct_export.svg?style=flat-square)](http://travis-ci.org/the-oneacct-export-project/oneacct_export)
+[![Gemnasium](https://img.shields.io/gemnasium/the-oneacct-export-project/oneacct_export.svg?style=flat-square)](https://gemnasium.com/the-oneacct-export-project/oneacct_export)
+[![Gem](https://img.shields.io/gem/v/oneacct-export.svg?style=flat-square)](https://rubygems.org/gems/oneacct-export)
+[![Code Climate](https://img.shields.io/codeclimate/github/the-oneacct-export-project/oneacct_export.svg?style=flat-square)](https://codeclimate.com/github/the-oneacct-export-project/oneacct_export)
+[![DockerHub](https://img.shields.io/badge/docker-ready-blue.svg?style=flat-square)](https://hub.docker.com/r/oneacctexport/oneacct-export/)
 
 
 ## Requirements
@@ -16,7 +17,7 @@ Exporting OpenNebula accounting data.
 ## Installation
 ### From distribution specific packages
 Distribution specific packages can be created with
-[omnibus packaging for OneacctExport](https://github.com/EGI-FCTF/omnibus-oneacct-export).
+[omnibus packaging for OneacctExport](https://github.com/the-oneacct-export-project/omnibus-oneacct-export).
 When installing via packages you don't have to install neither ruby
 nor rubygems. Packages contain embedded ruby and all the necessary gems
 and libraries witch will not effect your system ruby, gems and libraries.
@@ -46,7 +47,7 @@ familiar with RVM, Bundler, Rake and other dev tools for Ruby!**
 To build and install the bleeding edge version from master
 
 ```bash
-git clone git://github.com/EGI-FCTF/oneacct_export.git
+git clone git://github.com/the-oneacct-export-project/oneacct_export.git
 cd oneacct_export
 gem install bundler
 bundle install
@@ -172,7 +173,7 @@ Usage oneacct-export [options]
 ```
 
 ### Package specific scripts
-When installed from packages build via [omnibus packaging for OneacctExport](https://github.com/EGI-FCTF/omnibus-oneacct-export),
+When installed from packages build via [omnibus packaging for OneacctExport](https://github.com/the-oneacct-export-project/omnibus-oneacct-export),
 both Sidekiq and OneacctExport are automatically registered as cron jobs to run
 periodically. Cron job managing OneacctExport uses a bash script which is
 simplifying OneacctExport interface for most common use cases. After the installation,
@@ -185,14 +186,14 @@ which when present in `/opt/oneacct-export/` directory serves as a configuration
 * `groups.exclude` - contains list of groups to exclude (same as combination of OneacctExport options `--exclude-groups` and `--group-file`)
 
 ## Code Documentation
-[Code Documentation for OneacctExport by YARD](http://rubydoc.info/github/EGI-FCTF/oneacct_export/)
+[Code Documentation for OneacctExport by YARD](http://rubydoc.info/github/the-oneacct-export-project/oneacct_export/)
 
 ## Continuous integration
-[Continuous integration for OneacctExport by Travis-CI](http://travis-ci.org/EGI-FCTF/oneacct_export/)
+[Continuous integration for OneacctExport by Travis-CI](http://travis-ci.org/the-oneacct-export-project/oneacct_export/)
 
 ## Development
 ### Contributing
-1. Fork it ( https://github.com/EGI-FCTF/oneacct_export/fork )
+1. Fork it ( https://github.com/the-oneacct-export-project/oneacct_export/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
