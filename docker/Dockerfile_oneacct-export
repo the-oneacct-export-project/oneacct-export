@@ -1,0 +1,49 @@
+FROM ruby:2.2-jessie
+
+ARG branch=master
+ARG version
+
+ENV name="oneacct-export" \
+    user="apel"
+ENV runDir="/var/run/${name}" \
+    logDir="/var/log/${name}" \
+    homeDir="/var/lib/${user}" \
+    spoolDir="/var/spool/${user}/outgoing/00000000"
+ENV confDir="${homeDir}/.${name}"
+
+LABEL application=${name} \
+      description="Exporting OpenNebula accounting data" \
+      maintainer="kimle@cesnet.cz" \
+      version=${version} \
+      branch=${branch}
+
+SHELL ["/bin/bash", "-c"]
+
+# oneacct-export
+RUN gem install ${name} -v "${version}" --no-document
+
+# EGI trust anchors
+RUN set -o pipefail && \
+    apt-get update && \
+    apt-get --assume-yes install curl && \
+    curl -s https://dist.eugridpma.info/distribution/igtf/current/GPG-KEY-EUGridPMA-RPM-3 | apt-key add - && \
+    echo $'#### EGI Trust Anchor Distribution ####\n\
+deb http://repository.egi.eu/sw/production/cas/1/current egi-igtf core' > /etc/apt/sources.list.d/egi.list && \
+    apt-get update && \
+    apt-get --assume-yes install ca-policy-egi-core gettext-base
+
+# env
+RUN useradd --system --shell /bin/false --home ${homeDir} --create-home --uid 1000 ${user} && \
+    usermod -L ${user} && \
+    mkdir -p ${runDir} ${logDir} ${spoolDir} ${confDir} && \
+    chown -R ${user}:${user} ${runDir} ${logDir} ${spoolDir} ${confDir}
+
+COPY config/* /oneacct-export/config/
+COPY bin/* /oneacct-export/bin/
+
+VOLUME ${logDir}
+VOLUME ${spoolDir}
+
+USER ${user}
+
+ENTRYPOINT ["/oneacct-export/bin/oneacct-wrapper.sh"]
