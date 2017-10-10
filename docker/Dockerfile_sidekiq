@@ -1,7 +1,7 @@
 ARG branch=master
 ARG version
 
-FROM misenko/oneacct-export:${version}
+FROM oneacctexport/oneacct-export:${version}
 
 ENV name="sidekiq"
 

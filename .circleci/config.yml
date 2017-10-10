@@ -10,7 +10,8 @@ jobs:
     steps:
       - run: apk add --no-cache git openssh
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 17.07.0-ce
       - run: |
           git config --global --replace-all versionsort.prereleasesuffix ".alpha"
           git config --global --add versionsort.prereleasesuffix ".beta"
